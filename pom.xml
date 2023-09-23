@@ -31,7 +31,7 @@
                 <version>0.0.8</version>
                 <!-- Main Declaration Required  -->
                 <configuration>
-                    <mainClass>com.example.Main</mainClass> <!-- Change to your main class -->
+                    <mainClass>com.example.Menu</mainClass> <!-- Change to your main class -->
                 </configuration>
             </plugin>
         </plugins>

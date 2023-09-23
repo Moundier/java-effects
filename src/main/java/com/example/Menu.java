@@ -42,11 +42,16 @@ public class Menu extends Application {
 		leftMenu.setStyle("-fx-background-color: lightgray;");
 
 		// Create menu items or buttons for the left menu
-		Button menuItem1 = new Button("Menu Item 1");
-		Button menuItem2 = new Button("Menu Item 2");
-		Button menuItem3 = new Button("Menu Item 3");
+		List<Button> btn_list = List.of(
+			new Button("Menu Item 1"),
+			new Button("Menu Item 2"),
+			new Button("Menu Item 3")
+		);
 
-		leftMenu.getChildren().addAll(menuItem1, menuItem2, menuItem3);
+		// Add Buttons to Menu
+		for (Button button : btn_list) {
+			leftMenu.getChildren().add(button);			
+		}
 
 		return leftMenu;
 	}
