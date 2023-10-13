@@ -24,6 +24,7 @@ public class ChatClient {
     public void sendRadarMessage() {
         try (DatagramSocket socket = new DatagramSocket()) {
             while (true) {
+                System.out.println("--------------------------------------------------------------");
                 System.out.println("[Socket_START]: Sending to Socket");
                 String radarMessage = JsonUser.serializeUser(this.user);
                 byte[] sendData = radarMessage.getBytes();
@@ -44,12 +45,11 @@ public class ChatClient {
             while (true) {
                 counter = counter + 1;
                 System.out.println("[Socket_READ]: cycle " + counter);
-                System.out.println("--------------------------------------------------------------");
                 byte[] receiveData = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(packet);
                 String radarMessage = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("[DATA_PACKET]: " + radarMessage);
+                System.out.println("[Sent_DATA_PACKET]: " + radarMessage);
 
                 User user = JsonUser.deserializeUser(radarMessage);
                 processRadarMessage(user); 
@@ -60,7 +60,7 @@ public class ChatClient {
     }
 
     private void processRadarMessage(User user) {
-        String monitor = String.format("[MONITOR]: Any User? %s , Any Radar? %s", usersOnline, lastRadarMessageTime);
+        String monitor = String.format("[Watch_MONITOR]: Any User? %s", usersOnline);
         System.out.println(monitor);
         // Check if the sender is not the current user
         if (!user.getInetAddress().equals(getLocalIpAddress())) {
@@ -78,8 +78,8 @@ public class ChatClient {
                 Set<User> usersToRemove = new HashSet<>();
     
                 for (User user : lastRadarMessageTime.keySet()) {
-                    long lastMessageTime = lastRadarMessageTime.get(user);
-                    if (currentTime - lastMessageTime > 30 * 1000) { // Change to milliseconds
+                    long lastActiveTime = lastRadarMessageTime.get(user);
+                    if (currentTime - lastActiveTime > 30000) { // Change to milliseconds
                         usersToRemove.add(user);
                     }
                 }
@@ -95,7 +95,6 @@ public class ChatClient {
             e.printStackTrace();
         }
     }
-      
 
     private static String getLocalIpAddress() {
         try {
@@ -118,10 +117,15 @@ public class ChatClient {
 
         ChatClient client = new ChatClient(user);
 
-        new Thread(client::sendRadarMessage).start();
-        new Thread(client::receiveRadarMessages).start();
+        List<Thread> thread_list = List.of(
+            new Thread(client::sendRadarMessage),
+            new Thread(client::receiveRadarMessages),
+            new Thread(client::removeInactiveUsers)
+        );
 
-        // Add a thread to periodically remove inactive users
-        new Thread(client::removeInactiveUsers).start();
+        for (Thread thread : thread_list) {
+            thread.start();
+        }
+
     }
 }
