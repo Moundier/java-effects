@@ -15,6 +15,9 @@ import javafx.stage.StageStyle;
 
 import static javafx.geometry.Pos.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class HomeView extends Application {
 
   public static void main(String[] args) {
@@ -56,30 +59,39 @@ public class HomeView extends Application {
 
     // Create an event handler for the login button
     openMenuBtn.setOnAction((e) -> {
+
       String username = usernameField.getText();
 
-      boolean usernameNotNull = (username != null);
-      boolean usernameNotEmpty = (!username.isEmpty());
-      boolean usernameIsValid = (username.length() >= 5);
+      // All are true by default
+      List<Boolean> conditions = List.of(
+          (username != null),
+          (!username.isEmpty()),
+          (username.length() >= 5));
 
       int errorCode = 0; // Initialize with a default error code
 
-      if (!usernameNotNull) 
-        errorCode = 1; // Error code for username is null
-      else if (!usernameNotEmpty) 
-        errorCode = 2; // Error code for username is empty
-      else if (!usernameIsValid)
-        errorCode = 3; // Error code for username length < 5
+      // Check for Errors
+      for (int i = 0; i < conditions.size(); i++) {
+        if (!conditions.get(i)) {
+          errorCode = i + 1;
+          break;         
+        }
+      }
 
       // Switch statement to handle different error cases
       switch (errorCode) {
-        case 0: goToMenu(username, primaryStage); // Closes Primary Stage and Set User
+        case 0:
+          primaryStage.close();
+          redirectMenu(username); // Closes Primary Stage and Set User
           break;
-        case 1: showErrorMessage("Login Failed", "Username is null.");
+        case 1:
+          ErrorModal.showErrorMessage("Login Failed", "Username is null.");
           break;
-        case 2: showErrorMessage("Login Failed", "Username is empty.");
+        case 2:
+          ErrorModal.showErrorMessage("Login Failed", "Username is empty.");
           break;
-        case 3: showErrorMessage("Login Failed", "Username length should be at least 5 characters.");
+        case 3:
+          ErrorModal.showErrorMessage("Login Failed", "Username length should be at least 5 characters.");
           break;
         default:
           break; // Handle any other unexpected cases
@@ -94,40 +106,15 @@ public class HomeView extends Application {
     primaryStage.show();
   }
 
-  public void goToMenu(String username, Stage closeStage) {
+  public void redirectMenu(String username) {
     User user = User.builder()
-      .username(username)
-      .status(Status.ONLINE)
-      .timestamp(System.currentTimeMillis())
-      .inetAddress(Host.getIpAddress())
-      .build();
-    
+        .username(username)
+        .status(Status.ONLINE)
+        .timestamp(System.currentTimeMillis())
+        .inetAddress(Host.getIpAddress())
+        .build();
+
     new MenuView(user).start(new Stage()); // No errors, navigate to the main application
-    closeStage.close();
   }
 
-  private void showErrorMessage(String title, String message) {
-    Stage dialog = new Stage(StageStyle.UTILITY);
-    dialog.setTitle(title);
-
-    GridPane grid = new GridPane();
-    grid.setPadding(new Insets(20, 20, 20, 20));
-
-    Label label = new Label(message);
-    label.setWrapText(true); // Allow text wrapping
-
-    Button closeButton = new Button("Close");
-    closeButton.setOnAction((e) -> {
-      dialog.close();
-    });
-
-    grid.add(label, 0, 0);
-    grid.add(closeButton, 0, 1);
-
-    Scene dialogScene = new Scene(grid, 400, 200);
-    dialog.setScene(dialogScene);
-    dialog.setResizable(true); // Allow resizing
-
-    dialog.showAndWait();
-  }
 }

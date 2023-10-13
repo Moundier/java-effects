@@ -124,7 +124,6 @@ public class ProbeService {
         }
     }
 
-
     public static void main(String[] args) {
         
         User user = User.builder()
