@@ -1,2 +1,6 @@
-com/example/Menu.class
+com/example/User$Status.class
+com/example/User$UserBuilder.class
+com/example/ChatClient.class
 com/example/Main.class
+com/example/User.class
+com/example/Menu.class

@@ -14,12 +14,27 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+        </dependency>
+
         <!-- JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>17</version> <!-- Use the version compatible with your JavaFX installation -->
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+        
     </dependencies>
 
     <build>
@@ -31,7 +46,7 @@
                 <version>0.0.8</version>
                 <!-- Main Declaration Required  -->
                 <configuration>
-                    <mainClass>com.example.Menu</mainClass> <!-- Change to your main class -->
+                    <mainClass>com.example.Main</mainClass> <!-- Change to your main class -->
                 </configuration>
             </plugin>
         </plugins>
