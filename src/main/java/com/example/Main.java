@@ -10,6 +10,13 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 public class Main extends Application {
+
+  public static void main(String[] args) {
+    launch(args);
+
+    new Menu();
+  }
+
   @Override
   public void start(Stage primaryStage) {
     primaryStage.setTitle("Login Page");
@@ -32,35 +39,52 @@ public class Main extends Application {
     TextField usernameField = new TextField();
     usernameField.setFont(fieldFont); // Set font size
 
-    Label passwordLabel = new Label("Password:");
-    passwordLabel.setFont(labelFont); // Set font size
-    PasswordField passwordField = new PasswordField();
-    passwordField.setFont(fieldFont); // Set font size
-
-    Button loginButton = new Button("Login");
-    loginButton.setFont(buttonFont); // Set font size
+    Button openMenuBtn = new Button("Login");
+    openMenuBtn.setFont(buttonFont); // Set font size
     Button closeButton = new Button("Close");
     closeButton.setFont(buttonFont); // Set font size
 
     // Add elements to the GridPane
     grid.add(usernameLabel, 0, 0);
     grid.add(usernameField, 1, 0);
-    grid.add(passwordLabel, 0, 1);
-    grid.add(passwordField, 1, 1);
-    grid.add(loginButton, 1, 2);
+    grid.add(openMenuBtn, 1, 2);
     grid.add(closeButton, 0, 2);
 
     // Create an event handler for the login button
-    loginButton.setOnAction(e -> {
+    openMenuBtn.setOnAction((e) -> {
       String username = usernameField.getText();
-      String password = passwordField.getText();
 
-      // Add your login validation logic here
-      if (isValidLogin(username, password)) {
-        showResizableDialog("Login Successful", "Welcome, " + username + "!");
-        // You can navigate to the main application here
-      } else {
-        showResizableDialog("Login Failed", "Invalid username or password.");
+      boolean usernameNotNull = (username != null);
+      boolean usernameNotEmpty = (!username.isEmpty());
+      boolean usernameIsValid = (username.length() >= 5);
+
+      int errorCode = 0; // Initialize with a default error code
+
+      if (!usernameNotNull) 
+        errorCode = 1; // Error code for username is null
+      else if (!usernameNotEmpty) 
+        errorCode = 2; // Error code for username is empty
+      else if (!usernameIsValid)
+        errorCode = 3; // Error code for username length < 5
+
+      // Switch statement to handle different error cases
+      switch (errorCode) {
+        case 0:
+          new Menu().start(new Stage()); // No errors, navigate to the main application
+          primaryStage.close();
+          break;
+        case 1:
+          showErrorMessage("Login Failed", "Username is null.");
+          break;
+        case 2:
+          showErrorMessage("Login Failed", "Username is empty.");
+          break;
+        case 3:
+          showErrorMessage("Login Failed", "Username length should be at least 5 characters.");
+          break;
+        default:
+          // Handle any other unexpected cases
+          break;
       }
     });
 
@@ -72,13 +96,7 @@ public class Main extends Application {
     primaryStage.show();
   }
 
-  private boolean isValidLogin(String username, String password) {
-    // Implement your own logic to validate the login credentials here
-    // For a demo, let's assume a simple hardcoded username and password
-    return username.equals("user") && password.equals("password");
-  }
-
-  private void showResizableDialog(String title, String message) {
+  private void showErrorMessage(String title, String message) {
     Stage dialog = new Stage(StageStyle.UTILITY);
     dialog.setTitle(title);
 
@@ -89,7 +107,9 @@ public class Main extends Application {
     label.setWrapText(true); // Allow text wrapping
 
     Button closeButton = new Button("Close");
-    closeButton.setOnAction(e -> dialog.close());
+    closeButton.setOnAction((e) -> {
+      dialog.close();
+    });
 
     grid.add(label, 0, 0);
     grid.add(closeButton, 0, 1);
@@ -99,9 +119,5 @@ public class Main extends Application {
     dialog.setResizable(true); // Allow resizing
 
     dialog.showAndWait();
-  }
-
-  public static void main(String[] args) {
-    launch(args);
   }
 }
