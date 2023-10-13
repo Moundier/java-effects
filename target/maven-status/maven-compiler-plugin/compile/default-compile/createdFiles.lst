@@ -1,6 +1,8 @@
-com/example/User$Status.class
-com/example/User$UserBuilder.class
-com/example/ChatClient.class
-com/example/Main.class
-com/example/User.class
-com/example/Menu.class
+com/example/model/User.class
+com/example/view/MenuView.class
+com/example/utils/JsonUser.class
+com/example/model/User$UserBuilder.class
+com/example/view/HomeView.class
+com/example/utils/Host.class
+com/example/service/ProbeService.class
+com/example/model/User$Status.class

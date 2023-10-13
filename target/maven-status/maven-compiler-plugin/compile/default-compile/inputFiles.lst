@@ -1,4 +1,6 @@
-/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/User.java
-/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/ChatClient.java
-/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/Main.java
-/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/Menu.java
+/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/utils/Host.java
+/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/view/HomeView.java
+/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/utils/JsonUser.java
+/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/view/MenuView.java
+/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/model/User.java
+/home/casanova/Desktop/working_d/java-effects/src/main/java/com/example/service/ProbeService.java
