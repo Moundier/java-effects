@@ -44,6 +44,7 @@ public class ChatClient {
             while (true) {
                 counter = counter + 1;
                 System.out.println("[Socket_READ]: cycle " + counter);
+                System.out.println("--------------------------------------------------------------");
                 byte[] receiveData = new byte[1024];
                 DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(packet);
@@ -69,25 +70,22 @@ public class ChatClient {
     }
 
     private void removeInactiveUsers() {
-
         try {
             while (true) {
-                long currentTime = System.currentTimeMillis() / 1000;
-                System.out.println("Seconds: " + currentTime);
-                List<User> usersToRemove = new ArrayList<>();
+                long currentTime = System.currentTimeMillis();
+                System.out.println("Current Time in Milliseconds: " + currentTime + "ms");
     
-                // Associate a time entry for a user
-                for (Map.Entry<User, Long> entry : lastRadarMessageTime.entrySet()) {
-                    if (currentTime - entry.getValue() > 30000) { // 30 seconds in milliseconds
-                        usersToRemove.add(entry.getKey());
+                Set<User> usersToRemove = new HashSet<>();
+    
+                for (User user : lastRadarMessageTime.keySet()) {
+                    long lastMessageTime = lastRadarMessageTime.get(user);
+                    if (currentTime - lastMessageTime > 30 * 1000) { // Change to milliseconds
+                        usersToRemove.add(user);
                     }
                 }
     
                 for (User user : usersToRemove) {
-                    // Remove the user from the onlineUsers list
                     lastRadarMessageTime.remove(user);
-                    // Handle any other cleanup or notification as needed
-                    lastRadarMessageTime.get(user);
                     usersOnline.remove(user);
                 }
     
@@ -96,8 +94,8 @@ public class ChatClient {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        
     }
+      
 
     private static String getLocalIpAddress() {
         try {
