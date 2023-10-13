@@ -12,12 +12,12 @@ public class ChatClient {
     private static final String BROADCAST_IP = "255.255.255.255";
 
     private User user;
-    private List<User> usersOnline;
-    private Map<String, Long> lastRadarMessageTime;
+    private Set<User> usersOnline;
+    private Map<User, Long> lastRadarMessageTime;
 
     public ChatClient(User user) {
         this.user = user;
-        this.usersOnline = new ArrayList<>();
+        this.usersOnline = new HashSet<>();
         this.lastRadarMessageTime = new HashMap<>();
     }
 
@@ -64,28 +64,39 @@ public class ChatClient {
         // Check if the sender is not the current user
         if (!user.getInetAddress().equals(getLocalIpAddress())) {
             usersOnline.add(user);
-            lastRadarMessageTime.put(user.getInetAddress(), System.currentTimeMillis());
+            lastRadarMessageTime.put(user, System.currentTimeMillis());
         }
     }
 
     private void removeInactiveUsers() {
-        long currentTime = System.currentTimeMillis();
-        List<String> usersToRemove = new ArrayList<>();
 
-        // Associate a time entry for a user
-        for (Map.Entry<String, Long> entry : lastRadarMessageTime.entrySet()) {
-            if (currentTime - entry.getValue() > 30000) { // 30 seconds in milliseconds
-                usersToRemove.add(entry.getKey());
+        try {
+            while (true) {
+                long currentTime = System.currentTimeMillis() / 1000;
+                System.out.println("Seconds: " + currentTime);
+                List<User> usersToRemove = new ArrayList<>();
+    
+                // Associate a time entry for a user
+                for (Map.Entry<User, Long> entry : lastRadarMessageTime.entrySet()) {
+                    if (currentTime - entry.getValue() > 30000) { // 30 seconds in milliseconds
+                        usersToRemove.add(entry.getKey());
+                    }
+                }
+    
+                for (User user : usersToRemove) {
+                    // Remove the user from the onlineUsers list
+                    lastRadarMessageTime.remove(user);
+                    // Handle any other cleanup or notification as needed
+                    lastRadarMessageTime.get(user);
+                    usersOnline.remove(user);
+                }
+    
+                Thread.sleep(5000);
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-        for (String user : usersToRemove) {
-            // Remove the user from the onlineUsers list
-            lastRadarMessageTime.remove(user);
-            // Handle any other cleanup or notification as needed
-            
-            // onlineUsers.remove();
-        }
+        
     }
 
     private static String getLocalIpAddress() {
