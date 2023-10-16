@@ -8,3 +8,6 @@
 * Maven
 * JavaFX
 * Docker
+
+### Todo
+- Make a list of computers IPs
