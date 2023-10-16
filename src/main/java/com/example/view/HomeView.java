@@ -64,9 +64,10 @@ public class HomeView extends Application {
 
       // All are true by default
       List<Boolean> conditions = List.of(
-          (username != null),
-          (!username.isEmpty()),
-          (username.length() >= 5));
+        (username != null),
+        (!username.isEmpty()),
+        (username.length() >= 5)
+      );
 
       int errorCode = 0; // Initialize with a default error code
 

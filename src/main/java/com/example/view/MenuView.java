@@ -3,7 +3,7 @@ package com.example.view;
 import java.util.List;
 
 import com.example.model.User;
-import com.example.service.ProbeService;
+import com.example.service.Broadcaster;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -25,7 +25,7 @@ public class MenuView extends Application {
 	public static void main(String[] args) {
 		launch(args);
 		
-		ProbeService.initProbe(user.getUsername());
+		Broadcaster.initProbe(user.getUsername());
 	}
 
 	@Override

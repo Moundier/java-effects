@@ -8,7 +8,7 @@ import com.example.model.User.Status;
 import com.example.utils.JsonUser;
 import com.example.utils.Host;
 
-public class ProbeService {
+public class Broadcaster {
 
     // Constants
     private static final int CHAT_PORT = 8085;
@@ -16,23 +16,23 @@ public class ProbeService {
     private static final String BROADCAST_IP = "255.255.255.255";
 
     // Attributes
-    protected User user;
-    protected Set<User> usersOnline;
-    protected Map<User, Long> lastRadarMessageTime;
+    protected static User user;
+    protected static Set<User> usersOnline;
+    protected static Map<User, Long> lastRadarMessageTime;
 
     // Constructor
-    public ProbeService(User user) {
-        this.user = user;
-        this.usersOnline = new HashSet<>();
-        this.lastRadarMessageTime = new HashMap<>();
+    public Broadcaster(User user) {
+        Broadcaster.user = user;
+        Broadcaster.usersOnline = new HashSet<>();
+        Broadcaster.lastRadarMessageTime = new HashMap<>();
     }
 
-    public void sendRadarMessage() {
+    static Runnable sendRadarMessage = () -> {
         try (DatagramSocket socket = new DatagramSocket()) {
             while (true) {
                 System.out.println("--------------------------------------------------------------");
                 System.out.println("[Socket_START]: Sending to Socket");
-                String radarMessage = JsonUser.serializeUser(this.user);
+                String radarMessage = JsonUser.serializeUser(user);
                 byte[] sendData = radarMessage.getBytes();
                 InetAddress broadcastAddress = InetAddress.getByName(BROADCAST_IP); // We send in BROAD_CAST
                 DatagramPacket packet = new DatagramPacket(sendData, sendData.length, broadcastAddress, RADAR_PORT);
@@ -42,11 +42,11 @@ public class ProbeService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    };
 
     private static int counter = 0; 
 
-    public void receiveRadarMessages() {
+    static Runnable receiveRadarMessages = () -> {
         try (DatagramSocket socket = new DatagramSocket(RADAR_PORT)) {
             while (true) {
                 counter = counter + 1;
@@ -63,19 +63,21 @@ public class ProbeService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    };
+
+    static Runnable processRadarMessage(User user) {
+        return () -> {
+            String monitor = String.format("[Watch_MONITOR]: Any User? %s", usersOnline);
+            System.out.println(monitor);
+            // Check if the sender is not the current user
+            if (!user.getInetAddress().equals(Host.getIpAddress())) {
+                usersOnline.add(user);
+                lastRadarMessageTime.put(user, System.currentTimeMillis());
+            }
+        };
     }
 
-    private void processRadarMessage(User user) {
-        String monitor = String.format("[Watch_MONITOR]: Any User? %s", usersOnline);
-        System.out.println(monitor);
-        // Check if the sender is not the current user
-        if (!user.getInetAddress().equals(Host.getIpAddress())) {
-            usersOnline.add(user);
-            lastRadarMessageTime.put(user, System.currentTimeMillis());
-        }
-    }
-
-    private void removeInactiveUsers() {
+    static Runnable removeInactiveUsers = () -> {
         try {
             while (true) {
                 long currentTime = System.currentTimeMillis();
@@ -100,23 +102,21 @@ public class ProbeService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
+    };
 
     public static void initProbe(String username) {
-
-        User user = User.builder()
+        
+        new Broadcaster(User.builder()
         .username(username)
         .inetAddress(Host.getIpAddress())
         .timestamp(System.currentTimeMillis())
         .status(Status.ONLINE)
-        .build();
-        
-        ProbeService probeService = new ProbeService(user);
+        .build());
 
         List<Thread> thread_list = List.of(
-            new Thread(probeService::sendRadarMessage),
-            new Thread(probeService::receiveRadarMessages),
-            new Thread(probeService::removeInactiveUsers)
+            new Thread(sendRadarMessage),
+            new Thread(receiveRadarMessages),
+            new Thread(removeInactiveUsers)
         );
 
         for (Thread thread : thread_list) {
@@ -125,25 +125,6 @@ public class ProbeService {
     }
 
     public static void main(String[] args) {
-        
-        User user = User.builder()
-        .username("Casanova")
-        .inetAddress(Host.getIpAddress())
-        .timestamp(System.currentTimeMillis())
-        .status(Status.ONLINE)
-        .build();
-        
-        ProbeService probeService = new ProbeService(user);
-
-        List<Thread> thread_list = List.of(
-            new Thread(probeService::sendRadarMessage),
-            new Thread(probeService::receiveRadarMessages),
-            new Thread(probeService::removeInactiveUsers)
-        );
-
-        for (Thread thread : thread_list) {
-            thread.start();
-        }
+        initProbe("Casanova");
     }
-
 }
