@@ -11,11 +11,9 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import static javafx.geometry.Pos.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class HomeView extends Application {
