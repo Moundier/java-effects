@@ -11,7 +11,7 @@ import com.example.utils.Host;
 public class Broadcaster {
 
     // Constants
-    private static final int CHAT_PORT = 8085;
+    // private static final int CHAT_PORT = 8085;
     private static final int RADAR_PORT = 8084;
     private static final String BROADCAST_IP = "255.255.255.255";
 
