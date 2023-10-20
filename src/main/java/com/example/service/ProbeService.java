@@ -70,6 +70,7 @@ public class ProbeService {
         System.out.println(monitor);
         // Check if the sender is not the current user
         if (!user.getInetAddress().equals(Host.getIpAddress())) {
+            // Here, Dont need to add to a list, but to the interface list instead
             usersOnline.add(user);
             lastRadarMessageTime.put(user, System.currentTimeMillis());
         }
