@@ -84,13 +84,13 @@ public class HomeView extends Application {
           redirectMenu(username); // Closes Primary Stage and Set User
           break;
         case 1:
-          ErrorModal.showErrorMessage("Login Failed", "Username is null.");
+          ErrorView.showErrorMessage("Login Failed", "Username is null.");
           break;
         case 2:
-          ErrorModal.showErrorMessage("Login Failed", "Username is empty.");
+          ErrorView.showErrorMessage("Login Failed", "Username is empty.");
           break;
         case 3:
-          ErrorModal.showErrorMessage("Login Failed", "Username length should be at least 5 characters.");
+          ErrorView.showErrorMessage("Login Failed", "Username length should be at least 5 characters.");
           break;
         default:
           break; // Handle any other unexpected cases
