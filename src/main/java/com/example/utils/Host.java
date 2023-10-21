@@ -10,8 +10,9 @@ public class Host {
             // Get the local host's address and return it as a string
             return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
+            // Set Fallback value
             e.printStackTrace();
-            return "192.168.0.6"; // Default or fallback value
+            return "192.168.0.6"; 
         }
     }
 }
