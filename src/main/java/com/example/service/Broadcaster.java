@@ -56,7 +56,7 @@ public class Broadcaster {
         try (DatagramSocket socket = new DatagramSocket(RADAR_PORT)) {
             while (true) {
                 DONE.log("cycle " + updateCycle());
-                byte[] receiveData = new byte[1024];
+                byte[] receiveData = new byte[4096];
                 DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(packet);
                 String radarMessage = new String(packet.getData(), 0, packet.getLength());
