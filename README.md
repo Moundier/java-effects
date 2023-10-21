@@ -2,6 +2,7 @@
 
 * Run `mvn clean install`
 * Run `mvn clean javafx:run`
+* Run `mvn clean javafx:run -Dmaven.test.redirectTestOutputToFile=false`
 
 ### Made with
 * Java
