@@ -15,6 +15,7 @@ import java.net.InetAddress; // Import InetAddress
 @EqualsAndHashCode
 public class User {
 
+    /* Next fix attributes */
     @EqualsAndHashCode.Include
     private String username;
 
