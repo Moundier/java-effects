@@ -2,10 +2,8 @@ package com.example.service;
 
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import com.example.model.User;
-import com.example.model.User.Status;
 
 import com.example.utils.JsonUser;
 import com.example.utils.Host;
