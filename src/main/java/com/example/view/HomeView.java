@@ -110,10 +110,10 @@ public class HomeView extends Application {
         .username(username)
         .status(Status.ONLINE)
         .timestamp(System.currentTimeMillis())
-        .inetAddress(Host.getIpAddress())
+        .inetAddress(Host.fetchLocalIP())
         .build();
 
-    new MenuView(user).start(new Stage()); // No errors, navigate to the main application
+    new MenuView(user).start(new Stage()); // All good, navigate to the main application
   }
 
 }

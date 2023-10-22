@@ -16,11 +16,11 @@ import java.util.List;
 
 public class MenuView extends Application {
 
-    private static User user;
-
+    private User user;
+    
     public MenuView(User user) {
-        MenuView.user = user;
-        Broadcaster.initProbe(user.getUsername()); // Start Broadcast
+        this.user = user;
+        new Broadcaster(this.user);
     }
 
     public static void main(String[] args) {
@@ -58,7 +58,7 @@ public class MenuView extends Application {
             "-fx-border-radius: 5;"
         );
 
-        Label titleLabel = new Label("Welcome " + MenuView.user.getUsername());
+        Label titleLabel = new Label("Welcome " + this.user.getUsername());
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16;"); // Set font size to 16
 
         leftMenu.getChildren().add(titleLabel);
