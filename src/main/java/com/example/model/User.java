@@ -1,12 +1,12 @@
 package com.example.model;
 
-import java.net.InetAddress;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.net.InetAddress; // Import InetAddress
 
 @Data
 @Builder
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 public class User {
 
-    @EqualsAndHashCode.Exclude
+    @EqualsAndHashCode.Include
     private String username;
 
     @EqualsAndHashCode.Exclude
@@ -25,7 +25,7 @@ public class User {
     private Status status;
 
     @EqualsAndHashCode.Include
-    private String inetAddress; // InetAddress 
+    private InetAddress inetAddress; // Use InetAddress instead of String
 
     public enum Status { IDLE, AVOID, ONLINE }
 }
