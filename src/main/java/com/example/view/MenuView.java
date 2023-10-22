@@ -12,15 +12,17 @@ import javafx.stage.Stage;
 import com.example.model.User;
 import com.example.service.Broadcaster;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MenuView extends Application {
 
     private User user;
+    private Broadcaster broadcaster;
     
     public MenuView(User user) {
         this.user = user;
-        new Broadcaster(this.user);
+        this.broadcaster = new Broadcaster(this.user);
     }
 
     public static void main(String[] args) {
@@ -63,17 +65,24 @@ public class MenuView extends Application {
 
         leftMenu.getChildren().add(titleLabel);
 
-        List<Button> btnList = List.of(
-            new Button("Menu Item 1"),
-            new Button("Menu Item 2"),
-            new Button("Menu Item 3")
-        );
+        List<Button> buttons = new ArrayList<>();
+        // buttons.add(new Button("Always"));
+        
+        for (User user : this.broadcaster.getUsersOnline()) {
+            buttons.add(new Button(user.getUsername()));
+        }
+        
+        // List<Button> btnList = List.of(
+        //     new Button("Menu Item 1"),
+        //     new Button("Menu Item 2"),
+        //     new Button("Menu Item 3")
+        // );
 
-        for (Button button : btnList) {
+        for (Button button : buttons) {
             button.setStyle("-fx-font-size: 16;"); // Set font size to 16 for buttons
         }
 
-        leftMenu.getChildren().addAll(btnList);
+        leftMenu.getChildren().addAll(buttons);
 
         return leftMenu;
     }
