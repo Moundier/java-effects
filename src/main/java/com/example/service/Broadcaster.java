@@ -12,6 +12,9 @@ import com.example.utils.Console.INFO;
 import com.example.utils.Console.LINE;
 import com.example.utils.Console.WARN;
 
+import lombok.Data;
+
+@Data
 public class Broadcaster {
 
     private final int RADAR_PORT = 8084;
