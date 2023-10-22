@@ -5,14 +5,15 @@ import java.net.UnknownHostException;
 
 public class Host {
     
-    public static String getIpAddress() {
+    public static InetAddress fetchLocalIP() {
         try {
-            // Get the local host's address and return it as a string
-            return InetAddress.getLocalHost().getHostAddress();
+            // Get the local host's address and return it as an InetAddress
+            String inetAddress = InetAddress.getLocalHost().getHostAddress();
+            return InetAddress.getByName(inetAddress);
         } catch (UnknownHostException e) {
-            // Set Fallback value
+            // Should return fallback of "192.168.0.6"
             e.printStackTrace();
-            return "192.168.0.6"; 
+            return null;
         }
     }
 }
