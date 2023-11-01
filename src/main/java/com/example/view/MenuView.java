@@ -39,8 +39,6 @@ public class MenuView extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Tabbed Menu Example");
 
-        
-
         BorderPane borderPane = new BorderPane();
         Scene scene = new Scene(borderPane, 800, 600);
         primaryStage.setScene(scene);
@@ -67,7 +65,6 @@ public class MenuView extends Application {
         // VBox and TabPane positions
         borderPane.setLeft(leftMenu);
         borderPane.setCenter(tabPane);
-
     }
 
     private VBox initSideMenu(ComboBox<Button> dropdown) {
@@ -119,10 +116,7 @@ public class MenuView extends Application {
         leftMenu.getChildren().addAll(TEST_BUTTONS);
 
         // Dropdown per parameter
-        leftMenu.getChildren().addAll(dropdown);
-
-        
-
+        leftMenu.getChildren().addAll(dropdown);        
 
         return leftMenu;
     }
