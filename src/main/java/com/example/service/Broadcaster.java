@@ -4,7 +4,6 @@ import java.net.*;
 import java.util.*;
 
 import com.example.model.User;
-
 import com.example.utils.JsonUser;
 import com.example.utils.Host;
 import com.example.utils.Console.DONE;
@@ -21,29 +20,19 @@ public class Broadcaster {
     private final String BROADCAST_IP = "255.255.255.255";
 
     private User user;
-    private Set<User> usersOnline;
-    private Map<User, Long> lastRadarMessageTime;
+    private Set<User> usersOnline = new HashSet<>();
 
     public Broadcaster(User user) {
         this.user = user;
-        this.usersOnline = new HashSet<>();
-        this.lastRadarMessageTime = new HashMap<>();
         initProbe(this.user.getUsername());
     }
 
     Runnable sendRadarMessage = () -> {
-        
-        try {
-          synchronized (this) {
-            if (user == null) this.wait();
-          }
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-
         try (DatagramSocket socket = new DatagramSocket()) {
+
             while (true) {
-                DONE.log("We are sending!");
+
+                DONE.log("The Broadcaster Thread is Working...");
                 String radarMessage = JsonUser.serializeUser(user);
                 byte[] sendData = radarMessage.getBytes();
                 InetAddress broadcastAddress = InetAddress.getByName(BROADCAST_IP);
@@ -51,6 +40,7 @@ public class Broadcaster {
                 socket.send(packet);
                 Thread.sleep(5000);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -64,13 +54,15 @@ public class Broadcaster {
 
     Runnable receiveRadarMessages = () -> {
         try (DatagramSocket socket = new DatagramSocket(RADAR_PORT)) {
+
             while (true) {
-                DONE.log("cycle " + updateCycle());
-                byte[] receiveData = new byte[4096];
-                DatagramPacket packet = new DatagramPacket(receiveData, receiveData.length);
+
+                DONE.log("Counter: " + updateCycle());
+                byte[] buffer = new byte[4096];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 String radarMessage = new String(packet.getData(), 0, packet.getLength());
-                DONE.log("received: " + radarMessage);
+                INFO.log("Found: " + radarMessage);
                 User receivedUser = JsonUser.deserializeUser(radarMessage);
                 processRadarMessage(receivedUser);
             }
@@ -81,82 +73,59 @@ public class Broadcaster {
 
     void processRadarMessage(User receivedUser) {
 
-        if (usersOnline.isEmpty()) {
-            WARN.log("No users online.");
-        } else {
-            INFO.log(String.format("monitor: Found online users: %s", usersOnline));
-        }
+        synchronized (usersOnline) {
 
-        if (!receivedUser.getInetAddress().equals(Host.fetchLocalIP())) {
-            
-            // usersOnline.add(receivedUser);
-            
-            synchronized(usersOnline) {
+            Boolean isFound = (usersOnline.isEmpty());
+            Boolean isCurrent = (receivedUser.getInetAddress().equals(Host.fetchLocalIP()));
+
+            if (isFound)
+                WARN.log("No users online.");
+
+            if (!isFound)
+                INFO.log("Online " + usersOnline);
+
+            if (!isCurrent) {
                 usersOnline.add(receivedUser);
                 usersOnline.notify();
             }
-            lastRadarMessageTime.put(receivedUser, System.currentTimeMillis());
         }
     }
 
     Runnable removeInactiveUsers = () -> {
         try {
             while (true) {
-                long currentTime = System.currentTimeMillis();
-
-                LINE.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-                DONE.log("...Epoch Interval(ms): " + currentTime);
-                Set<User> usersToRemove = new HashSet<>();
-
-                for (User user : lastRadarMessageTime.keySet()) {
-                    long lastActiveTime = lastRadarMessageTime.get(user);
-                    if (currentTime - lastActiveTime > 30000) {
-                        usersToRemove.add(user);
+                Thread.sleep(8000);
+                synchronized (usersOnline) {
+                    List<User> inactive = new ArrayList<>();
+                    for (User user : usersOnline) {
+                        if (System.currentTimeMillis() - user.getTimestamp() > 30000) {
+                            inactive.add(user);
+                            WARN.log("This should not happen " + user);
+                        }
                     }
-                }
 
-                for (User user : usersToRemove) {
-                    lastRadarMessageTime.remove(user);
-                    synchronized(usersOnline) {
+                    for (User user : inactive)
                         usersOnline.remove(user);
-                        usersOnline.notify();
-                    }
                 }
-
-                Thread.sleep(5000);
-            }
-        } catch (InterruptedException e) {
+            } 
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
     };
 
     public void initProbe(String username) {
 
-        INFO.log(String.format("building the user %s...", username));
+        LINE.log("building the user " + username);
+        LINE.log("Broadcaster Running at Port 8084");
 
-        INFO.log("threading up...");
         List<Thread> SERVICES = List.of(
                 new Thread(sendRadarMessage),
                 new Thread(receiveRadarMessages),
                 new Thread(removeInactiveUsers));
 
-        INFO.log("threads backgrounding...");
         for (Thread thread : SERVICES)
             thread.start();
     }
 
-    // Keep for testing
-
-    // public static void main(String[] args) throws InterruptedException{
-    // User user = User.builder()
-    // .username("Casanova")
-    // .inetAddress(Host.fetchLocalIP())
-    // .timestamp(System.currentTimeMillis())
-    // .status(Status.ONLINE)
-    // .build();
-
-    // Broadcaster broadcaster = new Broadcaster(user); // Pass an initial User
-    // object or null
-    // broadcaster.initProbe("Casanova");
-    // }
 }
