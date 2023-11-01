@@ -1,6 +1,5 @@
 package com.example.view;
 
-
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -12,13 +11,18 @@ import javafx.stage.Stage;
 import com.example.model.User;
 import com.example.service.Broadcaster;
 
-import java.util.ArrayList;
 import java.util.List;
+
+/*
+ * @author Casanova
+ * @date 2023-11-01
+ * @time 15:29
+ */
 
 public class MenuView extends Application {
 
     private User user;
-    private Broadcaster broadcaster;
+    private Broadcaster broadcaster; // Keep for future
     
     public MenuView(User user) {
         this.user = user;
@@ -65,24 +69,48 @@ public class MenuView extends Application {
 
         leftMenu.getChildren().add(titleLabel);
 
-        List<Button> buttons = new ArrayList<>();
-        // buttons.add(new Button("Always"));
+        // List<Button> buttons = new ArrayList<>();
         
-        for (User user : this.broadcaster.getUsersOnline()) {
-            buttons.add(new Button(user.getUsername()));
-        }
+        // TODO: Add buttons based on User
+        // for (User user : this.broadcaster.getUsersOnline()) {
+        //     buttons.add(new Button(user.getUsername()));
+        // }
         
-        // List<Button> btnList = List.of(
-        //     new Button("Menu Item 1"),
-        //     new Button("Menu Item 2"),
-        //     new Button("Menu Item 3")
-        // );
+        // TODO: remove testing buttons
+        List<Button>  TEST_BUTTONS = List.of(
+            new Button("Menu Item 1"),
+            new Button("Menu Item 2"),
+            new Button("Menu Item 3")
+        );
 
-        for (Button button : buttons) {
-            button.setStyle("-fx-font-size: 16;"); // Set font size to 16 for buttons
+        // TODO: remove testing buttons
+        for (Button button : TEST_BUTTONS) {
+            button.setOnMouseClicked((e) -> {
+                int index = TEST_BUTTONS.indexOf(button);
+                boolean twiceClick = e.getClickCount() == 2;
+                if (twiceClick) System.out.println("Double Click Happened in button " + index);
+            });
         }
 
-        leftMenu.getChildren().addAll(buttons);
+        // for (Button button : buttons) {
+        //     button.setStyle("-fx-font-size: 16;"); // Set font size to 16 for buttons
+        // }
+
+        // leftMenu.getChildren().addAll(buttons);
+        leftMenu.getChildren().addAll(TEST_BUTTONS);
+
+        // Dropdown
+
+        ComboBox<Button> dropdown = new ComboBox<>();
+        dropdown.setPromptText("Select a status");
+
+        dropdown.getItems().addAll(
+            new Button("ONLINE"),
+            new Button("IDLE"),
+            new Button("AVOID")
+        );
+
+        leftMenu.getChildren().add(dropdown);
 
         return leftMenu;
     }
@@ -90,18 +118,18 @@ public class MenuView extends Application {
     private TabPane initTabsMenu() {
         TabPane tabPane = new TabPane();
 
+        // TODO: testing tabs
         List<Tab> tabList = List.of(
             new Tab("Tab 1"),
             new Tab("Tab 2"),
             new Tab("Tab 3")
         );
 
-        // Apply font size to tab labels
+        // TODO: testing tabs
         for (Tab tab : tabList) {
-            // tab.setGraphic(new Label(tab.getText()));
 
             int index = tabList.indexOf(tab) + 1;
-            tab.setContent(createChatTabContent("Tab " + index));
+            tab.setContent(conversationOpens("Tab " + index));
 			tab.setStyle("-fx-font-size: 16;");
             tabPane.getTabs().add(tab);
         }
@@ -109,36 +137,40 @@ public class MenuView extends Application {
         return tabPane;
     }
 
-    private BorderPane createChatTabContent(String tabTitle) {
+    // When conversation opens, we open the chat
+
+    private BorderPane conversationOpens(String tabTitle) {
+        
         BorderPane tabContent = new BorderPane();
 
-        // Create a chat log (TextArea) with scroll bars
-        TextArea chatLog = new TextArea();
-        chatLog.setEditable(false);
-        chatLog.setWrapText(true);
-        chatLog.setStyle("-fx-font-size: 16;"); // Set font size to 16
+        // Text area Config
+        TextArea textArea = new TextArea();
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setStyle("-fx-font-size: 16;"); // Set font size to 16
 
-        ScrollPane scrollPane = new ScrollPane(chatLog);
+        ScrollPane scrollPane = new ScrollPane(textArea);
         scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollBarPolicy.ALWAYS);
 
-        // Create an input field and a send button
+        // Input Config
         TextField chatInput = new TextField();
         chatInput.setPromptText("Type your message...");
         chatInput.setStyle("-fx-font-size: 16;"); // Set font size to 16
 
+        // Button Config
         Button sendButton = new Button("Send");
         sendButton.setDefaultButton(true);
         sendButton.setStyle("-fx-font-size: 16;"); // Set font size to 16
 
-        // Create a listener for the send button to add the message to the chat log
-        sendButton.setOnAction(e -> {
+        // Create Input Listener
+        sendButton.setOnAction((e) -> {
             String message = chatInput.getText();
-            chatLog.appendText("You: " + message + "\n");
+            textArea.appendText("You: " + message + "\n");
             chatInput.clear();
         });
 
-        // Create GridPane for Positioning
+        // Positioning Pane, Input & Send
         GridPane chatGrid = new GridPane();
         chatGrid.setHgap(10);
         chatGrid.setVgap(10);
