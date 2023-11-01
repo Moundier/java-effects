@@ -33,25 +33,44 @@ public class MenuView extends Application {
         launch(args);
     }
 
+    // It was inside of start method, right under the TabPane
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Tabbed Menu Example");
 
-        VBox leftMenu = initSideMenu(); // Create a VBox for the left-side menu
+        
+
+        BorderPane borderPane = new BorderPane();
+        Scene scene = new Scene(borderPane, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        // Border Pane elements
+        ComboBox<Button> dropdown = new ComboBox<>();
+        dropdown.setPadding(new Insets(10, 10, 10, 10));
+        dropdown.setPromptText("Select a status");
+
+        borderPane.setBottom(dropdown);
+
+        dropdown.getItems().addAll(
+            new Button("ONLINE"),
+            new Button("IDLE"),
+            new Button("AVOID")
+        );
+
+        VBox leftMenu = initSideMenu(dropdown); // Create a VBox for the left-side menu
         leftMenu.setPrefWidth(200); // Set the preferred width (e.g., 200 pixels)
 
         TabPane tabPane = initTabsMenu(); // Create a TabPane for the top tabbed menu
 
-        BorderPane borderPane = new BorderPane();
+        // VBox and TabPane positions
         borderPane.setLeft(leftMenu);
         borderPane.setCenter(tabPane);
 
-        Scene scene = new Scene(borderPane, 800, 600);
-        primaryStage.setScene(scene);
-        primaryStage.show();
     }
 
-    private VBox initSideMenu() {
+    private VBox initSideMenu(ComboBox<Button> dropdown) {
         VBox leftMenu = new VBox(10);
         leftMenu.setPadding(new Insets(10));
 
@@ -99,18 +118,11 @@ public class MenuView extends Application {
         // leftMenu.getChildren().addAll(buttons);
         leftMenu.getChildren().addAll(TEST_BUTTONS);
 
-        // Dropdown
+        // Dropdown per parameter
+        leftMenu.getChildren().addAll(dropdown);
 
-        ComboBox<Button> dropdown = new ComboBox<>();
-        dropdown.setPromptText("Select a status");
+        
 
-        dropdown.getItems().addAll(
-            new Button("ONLINE"),
-            new Button("IDLE"),
-            new Button("AVOID")
-        );
-
-        leftMenu.getChildren().add(dropdown);
 
         return leftMenu;
     }
