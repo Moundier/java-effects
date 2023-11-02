@@ -20,7 +20,7 @@ public class Broadcaster {
     private final String BROADCAST_IP = "255.255.255.255";
 
     private User user;
-    private Set<User> usersOnline = new HashSet<>();
+    private Set<User> online = new HashSet<>();
 
     public Broadcaster(User user) {
         this.user = user;
@@ -29,9 +29,7 @@ public class Broadcaster {
 
     Runnable sendRadarMessage = () -> {
         try (DatagramSocket socket = new DatagramSocket()) {
-
             while (true) {
-
                 DONE.log("The Broadcaster Thread is Working...");
                 String radarMessage = JsonUser.serializeUser(user);
                 byte[] sendData = radarMessage.getBytes();
@@ -40,24 +38,22 @@ public class Broadcaster {
                 socket.send(packet);
                 Thread.sleep(5000);
             }
-
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             e.printStackTrace();
         }
     };
 
-    private int MONITOR_CYCLE = 0;
+    private int signal = 0;
 
-    public int updateCycle() {
-        return MONITOR_CYCLE = MONITOR_CYCLE + 1;
+    public int computed() {
+        return signal = signal + 1;
     }
 
     Runnable receiveRadarMessages = () -> {
         try (DatagramSocket socket = new DatagramSocket(RADAR_PORT)) {
-
             while (true) {
-
-                DONE.log("Counter: " + updateCycle());
+                DONE.log("Counter: " + computed());
                 byte[] buffer = new byte[4096];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
@@ -66,28 +62,32 @@ public class Broadcaster {
                 User receivedUser = JsonUser.deserializeUser(radarMessage);
                 processRadarMessage(receivedUser);
             }
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             e.printStackTrace();
         }
     };
 
     void processRadarMessage(User receivedUser) {
 
-        synchronized (usersOnline) {
+        synchronized (online) {
 
-            Boolean isFound = (usersOnline.isEmpty());
+            Boolean isFound = (online.isEmpty());
             Boolean isCurrent = (receivedUser.getInetAddress().equals(Host.fetchLocalIP()));
 
-            if (isFound)
-                WARN.log("No users online.");
+            if (isFound) WARN.log("No users online.");
 
-            if (!isFound)
-                INFO.log("Online " + usersOnline);
+            if (!isFound) INFO.log("Online " + online);
 
             if (!isCurrent) {
-                usersOnline.add(receivedUser);
-                usersOnline.notify();
-            }
+                online.add(receivedUser);
+                online.notify();
+            } 
+            /*
+            else {
+                online.add(receivedUser);
+                online.notify();
+            }  */
         }
     }
 
@@ -95,17 +95,19 @@ public class Broadcaster {
         try {
             while (true) {
                 Thread.sleep(8000);
-                synchronized (usersOnline) {
+                synchronized (online) {
+                    
                     List<User> inactive = new ArrayList<>();
-                    for (User user : usersOnline) {
-                        if (System.currentTimeMillis() - user.getTimestamp() > 30000) {
-                            inactive.add(user);
-                            WARN.log("This should not happen " + user);
-                        }
-                    }
+                    boolean userTimeoutCondition = System.currentTimeMillis() - user.getTimestamp() > 30000; 
 
-                    for (User user : inactive)
-                        usersOnline.remove(user);
+                    for (User user : online) 
+                        if (userTimeoutCondition)
+                            inactive.add(user);
+
+                    for (User user : inactive) {
+                        online.remove(user);
+                        WARN.log("This should not happen " + user);
+                    }
                 }
             } 
         }
@@ -120,12 +122,12 @@ public class Broadcaster {
         LINE.log("Broadcaster Running at Port 8084");
 
         List<Thread> SERVICES = List.of(
-                new Thread(sendRadarMessage),
-                new Thread(receiveRadarMessages),
-                new Thread(removeInactiveUsers));
+            new Thread(sendRadarMessage),
+            new Thread(receiveRadarMessages),
+            new Thread(removeInactiveUsers)
+        );
 
-        for (Thread thread : SERVICES)
-            thread.start();
+        for (Thread thread : SERVICES) thread.start();
     }
 
 }
