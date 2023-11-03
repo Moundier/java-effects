@@ -20,3 +20,20 @@ Windows:
 
 ### Todo
 - Make a list of computers IPs
+
+jar tf your-app.jar
+
+jar -xf your-app.jar (Generate MANIFEST)
+Move META-INF to src/main/resources
+Edit the MANIFEST.MF (Add: Main-Class: com.example.view.HomeView)
+
+jar cf target/your-app-updated.jar /path/to/META-INF (Recreate a JAR file with the modified META-INF)
+
+sudo docker build -t image .
+sudo docker run --rm -it image:latest
+
+# Session bugs
+* `lsof -i :8084`
+
+To kill forcelly
+* `kill -9 <PID>` 
