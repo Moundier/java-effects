@@ -1,6 +1,7 @@
 package com.example.view;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -11,7 +12,9 @@ import javafx.stage.Stage;
 import com.example.model.User;
 import com.example.service.Broadcaster;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /*
  * @author Casanova
@@ -22,11 +25,11 @@ import java.util.List;
 public class MenuView extends Application {
 
     private User user;
-    private Broadcaster broadcaster; // Keep for future
+    Set<Button> buttons = new HashSet<>();
+    VBox leftMenu = new VBox(10);
     
     public MenuView(User user) {
         this.user = user;
-        this.broadcaster = new Broadcaster(this.user);
     }
 
     public static void main(String[] args) {
@@ -68,7 +71,6 @@ public class MenuView extends Application {
     }
 
     private VBox initSideMenu(ComboBox<Button> dropdown) {
-        VBox leftMenu = new VBox(10);
         leftMenu.setPadding(new Insets(10));
 
         leftMenu.setStyle(
@@ -113,6 +115,7 @@ public class MenuView extends Application {
         // }
 
         // leftMenu.getChildren().addAll(buttons);
+        leftMenu.getChildren().addAll(buttons);
         leftMenu.getChildren().addAll(TEST_BUTTONS);
 
         // Dropdown per parameter
@@ -190,5 +193,24 @@ public class MenuView extends Application {
         tabContent.setCenter(chatGrid);
 
         return tabContent;
+    }
+
+    public void addUsers(Set<User> users) {
+        Runnable runnable = () -> {
+
+            System.out.println("IsWorking" + users);
+
+            for (User user : users) {
+                System.out.println("HERE");
+                System.out.println("HERE");
+                Set<Button> buttons = new HashSet<>();
+                buttons.add(new Button(user.getUsername()));
+                this.leftMenu.getChildren().addAll(buttons);              
+                System.out.println("HERE");
+            }
+
+        };
+
+        Platform.runLater(runnable);
     }
 }
