@@ -2,6 +2,7 @@ package com.example.view;
 
 import com.example.model.User;
 import com.example.model.User.Status;
+import com.example.service.Broadcaster;
 import com.example.utils.Host;
 
 import javafx.application.Application;
@@ -17,6 +18,8 @@ import static javafx.geometry.Pos.*;
 import java.util.List;
 
 public class HomeView extends Application {
+
+  private MenuView menuView;
 
   public static void main(String[] args) {
     launch(args);
@@ -81,7 +84,7 @@ public class HomeView extends Application {
       switch (errorCode) {
         case 0:
           primaryStage.close();
-          redirectMenu(username); // Closes Primary Stage and Set User
+          routeToMenu(username); // Closes Primary Stage and Set User
           break;
         case 1:
           ErrorView.showErrorMessage("Login Failed", "Username is null.");
@@ -105,7 +108,7 @@ public class HomeView extends Application {
     primaryStage.show();
   }
 
-  public void redirectMenu(String username) {
+  public void routeToMenu(String username) {
     User user = User.builder()
         .username(username)
         .status(Status.ONLINE)
@@ -113,7 +116,10 @@ public class HomeView extends Application {
         .inetAddress(Host.fetchLocalIP())
         .build();
 
-    new MenuView(user).start(new Stage()); // All good, navigate to the main application
+    // Start all of them
+    this.menuView = new MenuView(user);
+    this.menuView.start(new Stage());
+    new Broadcaster(user, menuView);
   }
 
 }
