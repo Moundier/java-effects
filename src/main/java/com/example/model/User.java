@@ -29,4 +29,8 @@ public class User {
     private InetAddress inetAddress; // Use InetAddress instead of String
 
     public enum Status { IDLE, AVOID, ONLINE }
+
+    public void updateTimestap() {
+        this.timestamp = System.currentTimeMillis();
+    }
 }
