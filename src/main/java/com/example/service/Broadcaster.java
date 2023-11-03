@@ -10,7 +10,11 @@ import com.example.utils.Console.DONE;
 import com.example.utils.Console.INFO;
 import com.example.utils.Console.LINE;
 import com.example.utils.Console.WARN;
+import com.example.utils.Console.FAIL;
+import com.example.view.MenuView;
 
+import javafx.application.Platform;
+import javafx.scene.control.Button;
 import lombok.Data;
 
 @Data
@@ -21,16 +25,18 @@ public class Broadcaster {
 
     private User user;
     private Set<User> online = new HashSet<>();
+    private MenuView menuView;
 
-    public Broadcaster(User user) {
+    public Broadcaster(User user, MenuView menuView) {
         this.user = user;
-        initProbe(this.user.getUsername());
+        this.menuView = menuView;
+        this.start();
     }
 
     Runnable sendRadarMessage = () -> {
         try (DatagramSocket socket = new DatagramSocket()) {
             while (true) {
-                DONE.log("The Broadcaster Thread is Working...");
+                DONE.log("sendRadarMessage");
                 String radarMessage = JsonUser.serializeUser(user);
                 byte[] sendData = radarMessage.getBytes();
                 InetAddress broadcastAddress = InetAddress.getByName(BROADCAST_IP);
@@ -40,6 +46,7 @@ public class Broadcaster {
             }
         } 
         catch (Exception e) {
+            FAIL.log("Server bind error on sending");
             e.printStackTrace();
         }
     };
@@ -53,12 +60,13 @@ public class Broadcaster {
     Runnable receiveRadarMessages = () -> {
         try (DatagramSocket socket = new DatagramSocket(RADAR_PORT)) {
             while (true) {
-                DONE.log("Counter: " + computed());
+                WARN.log("Counter: " + computed());
+                LINE.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
                 byte[] buffer = new byte[4096];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 String radarMessage = new String(packet.getData(), 0, packet.getLength());
-                INFO.log("Found: " + radarMessage);
+                WARN.log("Found: " + radarMessage);
                 User receivedUser = JsonUser.deserializeUser(radarMessage);
                 processRadarMessage(receivedUser);
             }
@@ -71,23 +79,29 @@ public class Broadcaster {
     void processRadarMessage(User receivedUser) {
 
         synchronized (online) {
+            
+            for (User user : online) {
+                if (user.equals(receivedUser)) user.updateTimestap(); 
+                // updateTimestap if receivedUser is contained in online
+            }
 
-            Boolean isFound = (online.isEmpty());
+            Boolean notFound = (online.isEmpty());
             Boolean isCurrent = (receivedUser.getInetAddress().equals(Host.fetchLocalIP()));
 
-            if (isFound) WARN.log("No users online.");
+            if (notFound) FAIL.log("No users online.");
 
-            if (!isFound) INFO.log("Online " + online);
+            if (!notFound) INFO.log("Online " + online);
 
             if (!isCurrent) {
+                this.menuView.addUsers(online);
                 online.add(receivedUser);
                 online.notify();
             } 
-            /*
             else {
+                this.menuView.addUsers(online);
                 online.add(receivedUser);
                 online.notify();
-            }  */
+            }  
         }
     }
 
@@ -95,18 +109,18 @@ public class Broadcaster {
         try {
             while (true) {
                 Thread.sleep(8000);
-                synchronized (online) {
+                synchronized (this.online) {
                     
                     List<User> inactive = new ArrayList<>();
-                    boolean userTimeoutCondition = System.currentTimeMillis() - user.getTimestamp() > 30000; 
 
-                    for (User user : online) 
-                        if (userTimeoutCondition)
+                    for (User user : this.online) {
+                        if (System.currentTimeMillis() - user.getTimestamp() > 30000)
                             inactive.add(user);
+                    }
 
                     for (User user : inactive) {
-                        online.remove(user);
-                        WARN.log("This should not happen " + user);
+                        this.online.remove(user);
+                        FAIL.log("This should not happen " + user);
                     }
                 }
             } 
@@ -116,12 +130,11 @@ public class Broadcaster {
         }
     };
 
-    public void initProbe(String username) {
+    public void start() {
 
-        LINE.log("building the user " + username);
         LINE.log("Broadcaster Running at Port 8084");
 
-        List<Thread> SERVICES = List.of(
+        Set<Thread> SERVICES = Set.of(
             new Thread(sendRadarMessage),
             new Thread(receiveRadarMessages),
             new Thread(removeInactiveUsers)
