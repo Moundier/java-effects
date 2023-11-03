@@ -10,15 +10,21 @@ public class Console {
     }
 
     public static class INFO {
-        public static Void log(String message) {
-            System.out.println(addYellowColor("[INFO]: ") + message); // Red
-            return null;
+        public static void log(String message) {
+            System.out.println(addBlueColor("[INFO]: ") + message); // Print info message in blue
         }
     }
 
     public static class WARN {
         public static Void log(String message) {
-            System.out.println(addRedColor("[WARN]: ") + message); // Red
+            System.out.println(addOrangeColor("[WARN]: ") + message); // Orange
+            return null;
+        }
+    }
+
+    public static class FAIL {
+        public static Void log(String message) {
+            System.out.println(addRedColor("[FAIL]: ") + message); // Red
             return null;
         }
     }
@@ -42,8 +48,12 @@ public class Console {
         return "\u001B[32m" + text + removeColor(); // ok
     }
 
-    public static String addYellowColor(String text) {
-        return "\u001B[33m" + text + removeColor();
+    public static String addOrangeColor(String text) {
+        return "\u001B[38;5;208m" + text + removeColor();
+    }
+
+    public static String addBlueColor(String text) {
+        return "\u001B[34m" + text + removeColor(); // Adds blue color
     }
 
     public static String removeColor() {
@@ -54,4 +64,5 @@ public class Console {
         Todo
         Iterate through the characters of a string. If a character is a special character, change it to gray
     */
+
 }
