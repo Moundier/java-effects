@@ -11,13 +11,9 @@ import com.example.utils.Console.INFO;
 import com.example.utils.Console.LINE;
 import com.example.utils.Console.WARN;
 import com.example.utils.Console.FAIL;
+import com.example.utils.Console.HINT;
 import com.example.view.MenuView;
 
-import javafx.application.Platform;
-import javafx.scene.control.Button;
-import lombok.Data;
-
-@Data
 public class Broadcaster {
 
     private final int RADAR_PORT = 8084;
@@ -66,7 +62,7 @@ public class Broadcaster {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 String radarMessage = new String(packet.getData(), 0, packet.getLength());
-                WARN.log("Found: " + radarMessage);
+                HINT.log("Found: " + radarMessage);
                 User receivedUser = JsonUser.deserializeUser(radarMessage);
                 processRadarMessage(receivedUser);
             }
@@ -79,29 +75,26 @@ public class Broadcaster {
     void processRadarMessage(User receivedUser) {
 
         synchronized (online) {
-            
+            // Update user timestmap
             for (User user : online) {
-                if (user.equals(receivedUser)) user.updateTimestap(); 
-                // updateTimestap if receivedUser is contained in online
+                if (user.equals(receivedUser)) 
+                    user.updateTimestap(); 
             }
 
             Boolean notFound = (online.isEmpty());
             Boolean isCurrent = (receivedUser.getInetAddress().equals(Host.fetchLocalIP()));
-
-            if (notFound) FAIL.log("No users online.");
-
-            if (!notFound) INFO.log("Online " + online);
-
-            if (!isCurrent) {
-                this.menuView.addUsers(online);
-                online.add(receivedUser);
-                online.notify();
-            } 
+            
+            if (notFound) 
+                FAIL.log("No users online.");
             else {
+                INFO.log("Online " + online);
+            }
+
+            if (!isCurrent || isCurrent ) {
                 this.menuView.addUsers(online);
                 online.add(receivedUser);
                 online.notify();
-            }  
+            }
         }
     }
 
