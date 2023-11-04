@@ -17,12 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/*
- * @author Casanova
- * @date 2023-11-01
- * @time 15:29
- */
-
 public class MenuView extends Application {
 
     private User user;
