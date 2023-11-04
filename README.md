@@ -19,7 +19,12 @@ Windows:
 * Docker
 
 ### Todo
-- Make a list of computers IPs
+
+* Double click user button
+* Open tab with conversation
+* Send messages through socket
+* If close, catch and send print message back
+* Close click, close tab and conversation
 
 jar tf your-app.jar
 
