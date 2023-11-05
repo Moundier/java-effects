@@ -77,8 +77,10 @@ public class Broadcaster {
         synchronized (online) {
             // Update user timestmap
             for (User user : online) {
-                if (user.equals(receivedUser)) 
-                    user.updateTimestap(); 
+                if (user.equals(receivedUser)) {
+                    user.updateTimestap();
+                    user.updateStatus(receivedUser.getStatus()); 
+                }
             }
 
             Boolean notFound = (online.isEmpty());
