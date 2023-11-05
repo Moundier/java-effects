@@ -28,9 +28,17 @@ public class User {
     @EqualsAndHashCode.Include
     private InetAddress inetAddress; // Use InetAddress instead of String
 
-    public enum Status { IDLE, AVOID, ONLINE }
+    public enum Status { 
+        ONLINE,
+        BE_BACK_SOON, 
+        DO_NOT_DISTURB, 
+    }
 
     public void updateTimestap() {
         this.timestamp = System.currentTimeMillis();
+    }
+
+    public void updateStatus(User.Status status) {
+        this.status = status;
     }
 }
