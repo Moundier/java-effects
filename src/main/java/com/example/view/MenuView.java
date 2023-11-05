@@ -3,6 +3,7 @@ package com.example.view;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -13,12 +14,14 @@ import com.example.model.Message;
 import com.example.model.User;
 import com.example.model.User.Status;
 import com.example.utils.JsonMessage;
+import com.example.utils.Console.DONE;
 import com.example.utils.Console.FAIL;
-import com.example.utils.Console.INFO;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -81,19 +84,19 @@ public class MenuView extends Application {
 
     private TabPane tabPane = new TabPane();
 
-    
-    private TabPane openConnection(/* get user here */) {
-        Tab tab = new Tab("new Tab");
-        tab.setContent(conversationOpens("new Tab"));
+    private TabPane openConnection(User user) throws IOException {
+        Tab tab = new Tab("Private with " + user.getUsername());
+        BorderPane messagePanel = conversationOpens(user);
+        tab.setContent(messagePanel);
         tabPane.getTabs().add(tab);
         return tabPane;
     }
 
     // When conversation opens, we open the chat
 
-    private BorderPane conversationOpens(String tabTitle) {
+    private BorderPane conversationOpens(User user) throws IOException {
 
-        BorderPane tabContent = new BorderPane();
+        BorderPane tabPanel = new BorderPane();
 
         // Text area Config
         TextArea textArea = new TextArea();
@@ -101,13 +104,13 @@ public class MenuView extends Application {
         textArea.setWrapText(true);
         textArea.setStyle("-fx-font-size: 16;"); // Set font size to 16
 
-        ScrollPane journal = new ScrollPane(textArea);
-        journal.setHbarPolicy(ScrollBarPolicy.NEVER);
+        ScrollPane scrollPane = new ScrollPane(textArea);
+        scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
 
         // Input Config
-        TextField input = new TextField();
-        input.setPromptText("Type your message...");
-        input.setStyle("-fx-font-size: 16;"); // Set font size to 16
+        TextField inputField = new TextField();
+        inputField.setPromptText("Type your message...");
+        inputField.setStyle("-fx-font-size: 16;"); // Set font size to 16
 
         // Button Config
         Button sendButton = new Button("Send");
@@ -116,32 +119,39 @@ public class MenuView extends Application {
 
         // Button Listener
         sendButton.setOnAction((e) -> {
+        
+            String text = inputField.getText();
+            textArea.appendText("You: " + text + "\n");
 
-            /*
-             * HERE
-             * HERE
-             * HERE 
-             */
-
-            String message = input.getText();
-            textArea.appendText("You: " + message + "\n");
-            input.clear();
+            try {
+                Socket socket = new Socket("localhost", 8085);
+                Message message = new Message(text, this.user.getUsername());
+                String serialized = JsonMessage.serializeMessage(message);
+                System.out.println("Sending: " + serialized);
+                byte[] bytes = serialized.getBytes(StandardCharsets.UTF_8);
+        
+                socket.getOutputStream().write(bytes, 0, bytes.length);
+            } catch (IOException ex) {
+                ex.printStackTrace(); // Handle the IOException, e.g., log the error or show an alert
+            } finally {
+                inputField.clear();
+                // socket.close();
+            }
         });
 
         // Positioning Pane, Input & Send
-        GridPane chatGrid = new GridPane();
-        chatGrid.setHgap(10);
-        chatGrid.setVgap(10);
-        chatGrid.setPadding(new Insets(10));
+        GridPane mainPanel = new GridPane();
+        mainPanel.setHgap(10);
+        mainPanel.setVgap(10);
+        mainPanel.setPadding(new Insets(10));
 
-        chatGrid.add(journal, 0, 0, 1, 1);
-        chatGrid.add(input, 0, 1);
-        chatGrid.add(sendButton, 1, 1);
+        mainPanel.add(scrollPane, 0, 0, 1, 1);
+        mainPanel.add(inputField, 0, 1);
+        mainPanel.add(sendButton, 1, 1);
 
-        // Add the GridPane to the tab content
-        tabContent.setCenter(chatGrid);
+        tabPanel.setCenter(mainPanel); // Creates a tab with a chat at Center
 
-        return tabContent;
+        return tabPanel;
     }
 
     public void addUsers(Set<User> users) {
@@ -149,8 +159,21 @@ public class MenuView extends Application {
         Runnable runnable = () -> {
 
             for (User user : users) {
-                // System.out.println("Debug: added user!");
-                buttons.add(new Button(user.getUsername()));
+                
+                Button button = new Button(user.getUsername());
+
+                button.setOnMouseClicked((e) -> {
+                    if ((e.getClickCount() == 2)) {
+                        try {
+                            DONE.log("double click button " + button.hashCode());
+                            this.openConnection(user);
+                        } catch (Exception conn) {
+                            conn.getMessage();
+                        }
+                    }
+                });
+
+                buttons.add(button);
 
                 try {
                     this.leftMenu.getChildren().addAll(buttons);
@@ -160,21 +183,12 @@ public class MenuView extends Application {
                     // HINT.log("Send user, add button, avoid duplicates.");
                 }
             }
-
-            for (Button button : this.buttons) {
-                button.setOnMouseClicked((e) -> {
-                    if ((e.getClickCount() == 2)) {
-                        INFO.log("double click button " + button.hashCode());
-                        this.openConnection();
-                    }
-                });
-            }
         };
 
-        this.submit_to_java_fx_thread(runnable);
+        this.deferedThread(runnable);
     }
 
-    public void submit_to_java_fx_thread(Runnable runnable) {
+    public void deferedThread(Runnable runnable) {
         Platform.runLater(runnable);
     }
 
@@ -209,16 +223,16 @@ public class MenuView extends Application {
         }
     }
 
-    /* Server never closes */
+    /* Server that accepts connections never closes */
     public Runnable server() {
         
         return () -> {
             ServerSocket serverSocket;
             try {
                 serverSocket = new ServerSocket(8085);
-                System.out.println("Session started from " + serverSocket.getLocalPort());
+                System.out.println("Server: session start on " + serverSocket.getLocalPort());
                 while (true) {
-                    new Thread(this.session(serverSocket.accept())).start();
+                    new Thread(this.session(serverSocket.accept())).start(); 
                 }
             } 
             catch (Exception e) {
@@ -235,15 +249,24 @@ public class MenuView extends Application {
         return () -> {
             try {
                 while (true) {
-                    System.out.println();
-                    int readBytes = socket.getInputStream().read(new byte[1024]);
-                    String incoming = new String(new byte[1024], 0, readBytes);
+                    
+                    InputStream inputStream = socket.getInputStream();
+                    byte[] buffer = new byte[1024];
+
+                    String incoming = new String(buffer, 0, inputStream.read(buffer));
+
                     Message message = JsonMessage.deserializeMessage(incoming);
+                    System.out.println("Received: " + message);
+                    
                     if (!this.user.getUsername().equals(message.getSender())) {
-                        this.conversationOpens(message.getSender()); // conversationOpens
+
+                        // THIS SOCKET CLOSES, CATCH IN THE OTHER SOCKET
+
+                        // this.conversationOpens(message.getSender()); // conversationOpens
                         // Add tab is done above
                         // Append message into chat
                     }
+                    
                     // Append message into chat
                 }
             } 
