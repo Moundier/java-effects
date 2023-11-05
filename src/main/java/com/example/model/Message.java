@@ -14,7 +14,6 @@ import lombok.ToString;
 public class Message {
     
     /* Next fix attributes */
-    private String typeof;
+    private String text;
     private String sender;
-    private String status;
 }
