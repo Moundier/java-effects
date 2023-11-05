@@ -92,7 +92,10 @@ public class Broadcaster {
                 INFO.log("Online " + online);
             }
 
-            if (!isCurrent || isCurrent ) {
+            boolean both = !isCurrent || isCurrent; 
+            // boolean others = !isCurrent;
+            
+            if (both) {
                 this.menuView.addUsers(online);
                 online.add(receivedUser);
                 online.notify();
