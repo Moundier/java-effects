@@ -15,6 +15,6 @@ public class Message {
     
     /* Next fix attributes */
     private String typeof;
-    private String member;
+    private String sender;
     private String status;
 }
