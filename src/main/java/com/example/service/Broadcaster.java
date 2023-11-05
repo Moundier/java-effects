@@ -109,7 +109,7 @@ public class Broadcaster {
                     List<User> inactive = new ArrayList<>();
 
                     for (User user : this.online) {
-                        if (System.currentTimeMillis() - user.getTimestamp() > 30000)
+                        if (System.currentTimeMillis() - user.getTimestamp() > (30 * 1000))
                             inactive.add(user);
                     }
 
