@@ -9,22 +9,28 @@ import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import com.example.model.Message;
 import com.example.model.User;
-import com.example.utils.Console.HINT;
+import com.example.model.User.Status;
+import com.example.utils.JsonMessage;
+import com.example.utils.Console.FAIL;
 import com.example.utils.Console.INFO;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class MenuView extends Application {
 
     private User user;
-    Set<Button> buttons = new HashSet<>();
-    VBox leftMenu = new VBox(10);
+    private Set<Button> buttons = new HashSet<>();
+    private VBox leftMenu = new VBox(10);
 
     public MenuView(User user) {
         this.user = user;
+        new Thread(server()).start();
     }
 
     public static void main(String[] args) {
@@ -45,8 +51,6 @@ public class MenuView extends Application {
         VBox leftMenu = initSideMenu(); // Create a VBox for the left-side menu
         leftMenu.setPrefWidth(200); // Set the preferred width (e.g., 200 pixels)
 
-        TabPane tabPane = initTabsMenu(); // Create a TabPane for the top tabbed menu
-
         // VBox and TabPane positions
         borderPane.setLeft(leftMenu);
         borderPane.setCenter(tabPane);
@@ -56,61 +60,32 @@ public class MenuView extends Application {
         leftMenu.setPadding(new Insets(10));
 
         leftMenu.setStyle(
-        "-fx-background-color: lightgray; " +
-        "-fx-padding: 10; " +
-        "-fx-border-style: solid; " +
-        "-fx-border-width: 1; " +
-        "-fx-border-insets: 5; " +
-        "-fx-border-radius: 5; " +
-        "-fx-border-color: lightblue;"
-        );
+            "-fx-background-color: lightgray; " +
+            "-fx-padding: 10; " +
+            "-fx-border-style: solid; " +
+            "-fx-border-width: 1; " +
+            "-fx-border-insets: 5; " +
+            "-fx-border-radius: 5; " +
+            "-fx-border-color: lightblue;");
 
         Label titleLabel = new Label("Welcome " + this.user.getUsername());
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16;"); // Set font size to 16
 
         leftMenu.getChildren().add(titleLabel);
 
-        // TODO: remove testing buttons
-        List<Button> TEST_BUTTONS = List.of(
-                new Button("Menu Item 1"),
-                new Button("Menu Item 2"),
-                new Button("Menu Item 3"));
-
-        // TODO: remove testing buttons
-        for (Button button : TEST_BUTTONS) {
-            button.setOnMouseClicked((e) -> {
-                int index = TEST_BUTTONS.indexOf(button);
-                boolean twiceClick = e.getClickCount() == 2;
-                if (twiceClick)
-                    System.out.println("Double Click Happened in button " + index);
-            });
-        }
-
         leftMenu.getChildren().addAll(buttons);
-        leftMenu.getChildren().addAll(TEST_BUTTONS);
-        leftMenu.getChildren().add(createStatusSelector());
+        leftMenu.getChildren().add(chooseStatus());
 
         return leftMenu;
     }
 
-    private TabPane initTabsMenu() {
-        TabPane tabPane = new TabPane();
+    private TabPane tabPane = new TabPane();
 
-        // TODO: testing tabs
-        List<Tab> tabList = List.of(
-                new Tab("Tab 1"),
-                new Tab("Tab 2"),
-                new Tab("Tab 3"));
-
-        // TODO: testing tabs
-        for (Tab tab : tabList) {
-
-            int index = tabList.indexOf(tab) + 1;
-            tab.setContent(conversationOpens("Tab " + index));
-            tab.setStyle("-fx-font-size: 16;");
-            tabPane.getTabs().add(tab);
-        }
-
+    
+    private TabPane openConnection(/* get user here */) {
+        Tab tab = new Tab("new Tab");
+        tab.setContent(conversationOpens("new Tab"));
+        tabPane.getTabs().add(tab);
         return tabPane;
     }
 
@@ -130,9 +105,9 @@ public class MenuView extends Application {
         journal.setHbarPolicy(ScrollBarPolicy.NEVER);
 
         // Input Config
-        TextField chatInput = new TextField();
-        chatInput.setPromptText("Type your message...");
-        chatInput.setStyle("-fx-font-size: 16;"); // Set font size to 16
+        TextField input = new TextField();
+        input.setPromptText("Type your message...");
+        input.setStyle("-fx-font-size: 16;"); // Set font size to 16
 
         // Button Config
         Button sendButton = new Button("Send");
@@ -141,9 +116,16 @@ public class MenuView extends Application {
 
         // Button Listener
         sendButton.setOnAction((e) -> {
-            String message = chatInput.getText();
+
+            /*
+             * HERE
+             * HERE
+             * HERE 
+             */
+
+            String message = input.getText();
             textArea.appendText("You: " + message + "\n");
-            chatInput.clear();
+            input.clear();
         });
 
         // Positioning Pane, Input & Send
@@ -153,7 +135,7 @@ public class MenuView extends Application {
         chatGrid.setPadding(new Insets(10));
 
         chatGrid.add(journal, 0, 0, 1, 1);
-        chatGrid.add(chatInput, 0, 1);
+        chatGrid.add(input, 0, 1);
         chatGrid.add(sendButton, 1, 1);
 
         // Add the GridPane to the tab content
@@ -167,107 +149,119 @@ public class MenuView extends Application {
         Runnable runnable = () -> {
 
             for (User user : users) {
-
-                System.out.println("USER IS ADDED");
+                // System.out.println("Debug: added user!");
                 buttons.add(new Button(user.getUsername()));
 
                 try {
                     this.leftMenu.getChildren().addAll(buttons);
-                    System.out.println("[MenuView.java]: new button added");
+                    // System.out.println("[MenuView.java]: new button added");
                 } catch (Exception e) {
-                    HINT.log(e.toString());
-                    HINT.log("Intentionally adding and readding duplicates to Set of buttons!");
+                    // HINT.log(e.toString());
+                    // HINT.log("Send user, add button, avoid duplicates.");
                 }
             }
 
-            for (Button btn : this.buttons) {
-                btn.setOnMouseClicked((e) -> {
-                    int i = btn.hashCode();
-                    if (e.getClickCount() == 2) {
-                        INFO.log("double click button " + i);
+            for (Button button : this.buttons) {
+                button.setOnMouseClicked((e) -> {
+                    if ((e.getClickCount() == 2)) {
+                        INFO.log("double click button " + button.hashCode());
+                        this.openConnection();
                     }
                 });
             }
         };
 
+        this.submit_to_java_fx_thread(runnable);
+    }
+
+    public void submit_to_java_fx_thread(Runnable runnable) {
         Platform.runLater(runnable);
     }
 
-    // Future
-    public User.Status selection = User.Status.AVOID;
-
-    private ComboBox<String> createStatusSelector() {
+    private ComboBox<String> chooseStatus() {
 
         ComboBox<String> selectionBox = new ComboBox<>();
-        selectionBox.setPromptText("Select an option");
-        selectionBox.getItems().addAll("Option 1", "Option 2", "Option 3");
+        selectionBox.setPromptText("ONLINE");
+        selectionBox.getItems().addAll("ONLINE", "BE_BACK_SOON", "DO_NOT_DISTURB");
         selectionBox.setStyle("-fx-font-size: 14px; -fx-background-color: #f0f0f0; -fx-text-fill: #333333;");
 
         selectionBox.setOnAction(event -> {
-            String selectedOption = selectionBox.getValue();
-            handleSelectedOption(selectedOption);
+            String option = selectionBox.getValue();
+            changeStatus(option);
         });
 
         return selectionBox;
     }
 
-    private void handleSelectedOption(String selectedOption) {
-        switch (selectedOption) {
-            case "Option 1":
-                System.out.println("Option 1 selected"); // Add Action Here
+    private void changeStatus(String option) {
+        switch (option) {
+            case "ONLINE":
+                this.user.setStatus(Status.ONLINE);
                 break;
-            case "Option 2":
-                System.out.println("Option 2 selected"); // Add Action Here
+            case "BE_BACK_SOON":
+                this.user.setStatus(Status.BE_BACK_SOON);
                 break;
-            case "Option 3":
-                System.out.println("Option 3 selected"); // Add Action Here
+            case "DO_NOT_DISTURB":
+                this.user.setStatus(Status.DO_NOT_DISTURB);
                 break;
             default:
                 break;
         }
     }
 
-
-    // TODO
-
-    // Double-click user button handler
-    private void handleUserButtonDoubleClick(Button userButton) {
-        // Get the user related to this button
-        // User selectedUser = getUserFromButton(userButton); Implement this func
-
-        // Open a new tab with the conversation
-        // openConversationTab(selectedUser);
-
-        // You can also initiate a socket connection for this user here
+    /* Server never closes */
+    public Runnable server() {
+        
+        return () -> {
+            ServerSocket serverSocket;
+            try {
+                serverSocket = new ServerSocket(8085);
+                System.out.println("Session started from " + serverSocket.getLocalPort());
+                while (true) {
+                    new Thread(this.session(serverSocket.accept())).start();
+                }
+            } 
+            catch (Exception e) {
+                FAIL.log(e.getMessage());
+            }
+        };
     }
 
-    // Open a tab with the conversation
-    private void openConversationTab(User user) {
-        Tab tab = new Tab(user.getUsername());
-        BorderPane conversationPane = createConversationPane(user);
+    /* Session keep opened, but may close */
+    public Runnable session(Socket socket) {
 
-        tab.setContent(conversationPane);
-        // tabPane.getTabs().add(tab); To implement this tabs should be global
-    }
+        System.out.println("Session started from " + socket.getInetAddress());
 
-    // Create a conversation interface for a user
-    private BorderPane createConversationPane(User user) {
-        BorderPane conversationPane = new BorderPane();
-
-        // Add text area, input field, and send button
-        // Configure these components similar to what you did in your existing code
-
-        return conversationPane;
-    }
-
-    // Handle tab closing (e.g., when the user closes the tab)
-    private void handleTabClose(Tab tab) {
-        // You can implement logic here to notify the other end about the tab closure
-
-        // tabPane.getTabs().remove(tab); To implement this tabs should be global
+        return () -> {
+            try {
+                while (true) {
+                    System.out.println();
+                    int readBytes = socket.getInputStream().read(new byte[1024]);
+                    String incoming = new String(new byte[1024], 0, readBytes);
+                    Message message = JsonMessage.deserializeMessage(incoming);
+                    if (!this.user.getUsername().equals(message.getSender())) {
+                        this.conversationOpens(message.getSender()); // conversationOpens
+                        // Add tab is done above
+                        // Append message into chat
+                    }
+                    // Append message into chat
+                }
+            } 
+            catch (IOException e) {
+                FAIL.log(e.getMessage());
+            }
+        };
     }
 
 }
+
+// Comm = Communication
+
+// Action -> Trigger
+// (double_click_on_user) -> openComm
+// openComm = (openTab) + (openGrid) + (openSocket)
+// (send_message) -> socket.send()
+// closeComm = (closeTab) + (closeGrid) + (closeSocket)
 
 /* double click user button */
 /* open tab with conversation */
