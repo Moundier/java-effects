@@ -303,7 +303,15 @@ public class MenuView extends Application {
         FAIL.log("sendToSocket");
       } finally {
         inputBox.clear();
-        // socket.close();
+        this.closeSocket(socket);
+      }
+    }
+
+    public void closeSocket(Socket socket) {
+      try {
+        socket.close();
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
 
