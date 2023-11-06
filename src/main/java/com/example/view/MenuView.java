@@ -30,10 +30,11 @@ public class MenuView extends Application {
   private TabPane tabPane = new TabPane();
   private Set<Button> buttons = new HashSet<>();
   private Set<SpeakView> speakViews = new HashSet<>();
+  private Thread thread = new Thread(server());
 
   public MenuView(User user) {
     this.user = user;
-    new Thread(server()).start();
+    this.thread.start();
   }
 
   public static void main(String[] args) {
@@ -55,6 +56,11 @@ public class MenuView extends Application {
     // VBox and TabPane positions
     borderPane.setLeft(leftMenu);
     borderPane.setCenter(tabPane);
+
+    primaryStage.setOnCloseRequest((event) -> {
+      Runnable runnable = () -> this.thread.interrupt();
+      platform(runnable);
+    });
   }
 
   private VBox initSideMenu() {
@@ -105,10 +111,10 @@ public class MenuView extends Application {
       }
     };
 
-    this.sceneUpdate(runnable);
+    this.platform(runnable);
   }
 
-  private void sceneUpdate(Runnable runnable) {
+  private void platform(Runnable runnable) {
     // Make a runnable and use here
     Platform.runLater(runnable); 
   }
@@ -172,7 +178,7 @@ public class MenuView extends Application {
       try {
         while (true) {
 
-          byte[] buffer = new byte[1024];
+          byte[] buffer = new byte[2048];
           String incoming = new String(buffer, 0, socket.getInputStream().read(buffer));
           Message message = JsonMessage.deserializeMessage(incoming);
           System.out.println("[Socket] Received: " + message);
@@ -187,7 +193,7 @@ public class MenuView extends Application {
                 // TODO: Here is the problem
                 String current = speak.getTextArea().getText();
                 String text = current + "\n" + "Other: " + message.getText() + "\n";
-                this.sceneUpdate(() -> speak.getTextArea().setText(text));
+                this.platform(() -> speak.getTextArea().setText(text));
               } 
               catch (Exception e) {
                 e.getMessage();
@@ -207,6 +213,7 @@ public class MenuView extends Application {
   public class SpeakView {
 
     private User user;
+    private Socket socket;
     private Tab tab;
     private BorderPane borderPane;
     private GridPane gridPane;
@@ -258,15 +265,21 @@ public class MenuView extends Application {
 
     public SpeakView(User user) {
       this.user = user;
+      this.openSocket(socket);
       this.instantiateElements(); // elements instance
       this.configuringElements(); // elements settings
       this.configuringPanel(); // panel settings
       this.configuringTab(this.user);
       this.configuringButtonAction();
+      this.configuringTabOnClose();
     }
 
     public void configuringTabOnClose() {
-
+      this.tab.setOnClosed((e) -> {
+        String message = "Connection with" +  this.user + " got closed.";
+        ErrorView.showErrorMessage("Status", message);
+        this.closeSocket(this.socket);
+      });
     }
 
     public void configuringButtonAction() {
@@ -284,14 +297,9 @@ public class MenuView extends Application {
       String text = this.inputBox.getText();
       String current = this.messageArea.getText();
 
-      // TODO: Some dont get sent
-      // NOTE: If set without the previous here
-      // NOTE: it stopts overflowing the TextArea buffer
-      sceneUpdate(() -> {
-        this.messageArea.setText(current + "You: " + text);
-      });
+      // TODO: thread specific update of JavaFX
+      platform(() -> this.messageArea.setText(current + "You: " + text));
 
-      Socket socket = new Socket(user.getInetAddress(), 8085);
       try {
         Message message = new Message(text, this.user.getUsername());
         String serialized = JsonMessage.serializeMessage(message);
@@ -303,7 +311,16 @@ public class MenuView extends Application {
         FAIL.log("sendToSocket");
       } finally {
         inputBox.clear();
-        this.closeSocket(socket);
+        // this.closeSocket(socket);
+      }
+    }
+
+    public void openSocket(Socket socket) {
+      try {
+        this.socket = new Socket(user.getInetAddress(), 8085);
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.out.println("HELLOW");
       }
     }
 
@@ -312,6 +329,7 @@ public class MenuView extends Application {
         socket.close();
       } catch (Exception e) {
         e.printStackTrace();
+        System.out.println("HELLOW");
       }
     }
 
