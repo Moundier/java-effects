@@ -67,8 +67,7 @@ public class HomeView extends Application {
       List<Boolean> conditions = List.of(
         (username != null),
         (!username.isEmpty()),
-        (username.length() >= 5)
-      );
+        (username.length() >= 5));
 
       int errorCode = 0; // Initialize with a default error code
 
@@ -76,7 +75,7 @@ public class HomeView extends Application {
       for (int i = 0; i < conditions.size(); i++) {
         if (!conditions.get(i)) {
           errorCode = i + 1;
-          break;         
+          break;
         }
       }
 
@@ -110,16 +109,15 @@ public class HomeView extends Application {
 
   public void routeToMenu(String username) {
     User user = User.builder()
-        .username(username)
-        .status(Status.ONLINE)
-        .timestamp(System.currentTimeMillis())
-        .inetAddress(Host.fetchLocalIP())
-        .build();
+      .username(username)
+      .status(Status.ONLINE)
+      .timestamp(System.currentTimeMillis())
+      .inetAddress(Host.fetchLocalIP())
+      .build();
 
     // Start all of them
     this.menuView = new MenuView(user);
     this.menuView.start(new Stage());
     new Broadcaster(user, menuView);
   }
-
 }

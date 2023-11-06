@@ -115,10 +115,10 @@ public class MenuView extends Application {
             }
         };
 
-        this.deferedThread(runnable);
+        this.SET_DAEMON_THREAD(runnable);
     }
 
-    public void deferedThread(Runnable runnable) {
+    private void SET_DAEMON_THREAD(Runnable runnable) {
         Platform.runLater(runnable);
     }
 
@@ -215,8 +215,6 @@ public class MenuView extends Application {
             }
         };
     }
-
-    // Should I instantiate in the constructor??
 
     public class SpeakView {
 

@@ -12,8 +12,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Message {
-    
-    /* Next fix attributes */
-    private String text;
-    private String sender;
+
+  private String text;
+  private String sender;
 }

@@ -15,30 +15,30 @@ import java.net.InetAddress; // Import InetAddress
 @EqualsAndHashCode
 public class User {
 
-    /* Next fix attributes */
-    @EqualsAndHashCode.Include
-    private String username;
+  /* Next fix attributes */
+  @EqualsAndHashCode.Include
+  private String username;
 
-    @EqualsAndHashCode.Exclude
-    private Long timestamp;
+  @EqualsAndHashCode.Exclude
+  private Long timestamp;
 
-    @EqualsAndHashCode.Exclude
-    private Status status;
+  @EqualsAndHashCode.Exclude
+  private Status status;
 
-    @EqualsAndHashCode.Include
-    private InetAddress inetAddress; // Use InetAddress instead of String
+  @EqualsAndHashCode.Include
+  private InetAddress inetAddress; // Use InetAddress instead of String
 
-    public enum Status { 
-        ONLINE,
-        BE_BACK_SOON, 
-        DO_NOT_DISTURB, 
-    }
+  public enum Status {
+    ONLINE,
+    BE_BACK_SOON,
+    DO_NOT_DISTURB,
+  }
 
-    public void updateTimestap() {
-        this.timestamp = System.currentTimeMillis();
-    }
+  public void updateTimestap() {
+    this.timestamp = System.currentTimeMillis();
+  }
 
-    public void updateStatus(User.Status status) {
-        this.status = status;
-    }
+  public void updateStatus(User.Status status) {
+    this.status = status;
+  }
 }
