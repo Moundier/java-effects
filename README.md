@@ -42,3 +42,11 @@ sudo docker run --rm -it image:latest
 
 To kill forcelly
 * `kill -9 <PID>` 
+
+# JavaFX
+
+Any background method or thread, that applies changes to scenes in javaFx is, by default, respectfully either not executed or thread-unsafe.
+And also they might cause bugs or even crashes in the application.
+
+
+
