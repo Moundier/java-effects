@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.sql.Time;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class MenuView extends Application {
 
@@ -90,22 +92,15 @@ public class MenuView extends Application {
         Button button = new Button(user.getUsername());
 
         button.setOnMouseClicked((event) -> {
-          if ((event.getClickCount() == 2)) {
-            try {
-              DONE.log("double click button " + button.hashCode());
-              SpeakView speakView = new SpeakView(user);
-              this.speakViews.add(speakView);
-              this.tabPane.getTabs().add(speakView.getTab());
-            } catch (Exception e) {
-              FAIL.log(e.getMessage());
-              FAIL.log("AddUser1");
-            }
+          if (event.getClickCount() == 2) {
+            SpeakView speak = new SpeakView(user);
+            this.speakViews.add(speak);
+            this.tabPane.getTabs().add(speak.getTab());
           }
         });
 
-        this.buttons.add(button);
-
         try {
+          this.buttons.add(button);
           this.leftMenu.getChildren().addAll(buttons);
         } catch (Exception e) {
           WARN.log("Expected behavior (" + e.getMessage() + ")");
@@ -185,18 +180,17 @@ public class MenuView extends Application {
           Message message = JsonMessage.deserializeMessage(incoming);
           System.out.println("[Socket] Received: " + message);
 
-          for (SpeakView speakView : this.speakViews) {
-            if (
-              speakView.getUser().getUsername().equals(message.getSender()) &&
-              speakView.getUser().getInetAddress().equals(this.user.getInetAddress())
-            ) {
+          for (SpeakView speak : this.speakViews) {
+
+            boolean self = speak.getUser().getUsername().equals(message.getSender());
+            boolean localhost = speak.getUser().getInetAddress().equals(this.user.getInetAddress()); 
+            if (self && localhost) {
               try {
+                Thread.sleep(500); // This Helps Fixing?
                 // TODO: Here is the problem
-                String current = speakView.getTextArea().getText();
-                                
-                this.sceneUpdate(() -> {
-                  speakView.getTextArea().setText(current + "\n" + "Other: " + message.getText() + "\n");
-                });
+                String current = speak.getTextArea().getText();
+                String text = current + "\n" + "Other: " + message.getText() + "\n";
+                this.sceneUpdate(() -> speak.getTextArea().setText(text));
               } 
               catch (Exception e) {
                 e.getMessage();
@@ -249,9 +243,10 @@ public class MenuView extends Application {
       this.messageArea.setWrapText(true);
       // this.messageArea.setLayoutX(1000);
       this.messageArea.setStyle("-fx-font-size: 16;"); // Set font size to 16
-      // DONT_HELP this.messageArea.setPrefRowCount(100); 
+      this.messageArea.setPrefRowCount(50); 
 
       this.scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+      this.scrollPane.isFitToWidth();
 
       this.inputBox.setPromptText("Type your message...");
       this.inputBox.setStyle("-fx-font-size: 16;"); // Set font size to 16
@@ -271,6 +266,10 @@ public class MenuView extends Application {
       this.configuringPanel(); // panel settings
       this.configuringTab(this.user);
       this.configuringButtonAction();
+    }
+
+    public void configuringTabOnClose() {
+
     }
 
     public void configuringButtonAction() {
@@ -299,9 +298,9 @@ public class MenuView extends Application {
       try {
         Message message = new Message(text, this.user.getUsername());
         String serialized = JsonMessage.serializeMessage(message);
-        System.out.println("Sending: " + serialized);
-        byte[] bytes = serialized.getBytes(StandardCharsets.UTF_8);
-        socket.getOutputStream().write(bytes, 0, bytes.length);
+        System.out.println("[Socket] Sending: " + serialized);
+        byte[] send = serialized.getBytes(StandardCharsets.UTF_8);
+        socket.getOutputStream().write(send, 0, send.length);
       } catch (Exception e) {
         FAIL.log(e.getMessage());
         FAIL.log("sendToSocket");
