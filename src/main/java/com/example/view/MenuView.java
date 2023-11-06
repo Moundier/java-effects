@@ -13,7 +13,6 @@ import com.example.model.Message;
 import com.example.model.User;
 import com.example.model.User.Status;
 import com.example.utils.JsonMessage;
-import com.example.utils.Console.DONE;
 import com.example.utils.Console.FAIL;
 import com.example.utils.Console.WARN;
 
@@ -21,10 +20,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.sql.Time;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class MenuView extends Application {
 
