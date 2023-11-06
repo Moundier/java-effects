@@ -3,7 +3,6 @@ package com.example.view;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -16,9 +15,9 @@ import com.example.model.User.Status;
 import com.example.utils.JsonMessage;
 import com.example.utils.Console.DONE;
 import com.example.utils.Console.FAIL;
+import com.example.utils.Console.WARN;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +29,8 @@ public class MenuView extends Application {
     private User user;
     private Set<Button> buttons = new HashSet<>();
     private VBox leftMenu = new VBox(10);
+    private TabPane tabPane = new TabPane();
+    private Set<SpeakView> speakViews = new HashSet<>();
 
     public MenuView(User user) {
         this.user = user;
@@ -39,8 +40,6 @@ public class MenuView extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
-    // It was inside of start method, right under the TabPane
 
     @Override
     public void start(Stage primaryStage) {
@@ -82,78 +81,6 @@ public class MenuView extends Application {
         return leftMenu;
     }
 
-    private TabPane tabPane = new TabPane();
-
-    private TabPane openConnection(User user) throws IOException {
-        Tab tab = new Tab("Private with " + user.getUsername());
-        BorderPane messagePanel = conversationOpens(user);
-        tab.setContent(messagePanel);
-        tabPane.getTabs().add(tab);
-        return tabPane;
-    }
-
-    // When conversation opens, we open the chat
-
-    private BorderPane conversationOpens(User user) throws IOException {
-
-        BorderPane tabPanel = new BorderPane();
-
-        // Text area Config
-        TextArea textArea = new TextArea();
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
-        textArea.setStyle("-fx-font-size: 16;"); // Set font size to 16
-
-        ScrollPane scrollPane = new ScrollPane(textArea);
-        scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
-
-        // Input Config
-        TextField inputField = new TextField();
-        inputField.setPromptText("Type your message...");
-        inputField.setStyle("-fx-font-size: 16;"); // Set font size to 16
-
-        // Button Config
-        Button sendButton = new Button("Send");
-        sendButton.setDefaultButton(true);
-        sendButton.setStyle("-fx-font-size: 16;"); // Set font size to 16
-
-        // Button Listener
-        sendButton.setOnAction((e) -> {
-        
-            String text = inputField.getText();
-            textArea.appendText("You: " + text + "\n");
-
-            try {
-                Socket socket = new Socket("localhost", 8085);
-                Message message = new Message(text, this.user.getUsername());
-                String serialized = JsonMessage.serializeMessage(message);
-                System.out.println("Sending: " + serialized);
-                byte[] bytes = serialized.getBytes(StandardCharsets.UTF_8);
-        
-                socket.getOutputStream().write(bytes, 0, bytes.length);
-            } catch (IOException ex) {
-                ex.printStackTrace(); // Handle the IOException, e.g., log the error or show an alert
-            } finally {
-                inputField.clear();
-                // socket.close();
-            }
-        });
-
-        // Positioning Pane, Input & Send
-        GridPane mainPanel = new GridPane();
-        mainPanel.setHgap(10);
-        mainPanel.setVgap(10);
-        mainPanel.setPadding(new Insets(10));
-
-        mainPanel.add(scrollPane, 0, 0, 1, 1);
-        mainPanel.add(inputField, 0, 1);
-        mainPanel.add(sendButton, 1, 1);
-
-        tabPanel.setCenter(mainPanel); // Creates a tab with a chat at Center
-
-        return tabPanel;
-    }
-
     public void addUsers(Set<User> users) {
 
         Runnable runnable = () -> {
@@ -166,9 +93,12 @@ public class MenuView extends Application {
                     if ((e.getClickCount() == 2)) {
                         try {
                             DONE.log("double click button " + button.hashCode());
-                            this.openConnection(user);
-                        } catch (Exception conn) {
-                            conn.getMessage();
+                            SpeakView speakView = new SpeakView(user);
+                            this.speakViews.add(speakView);
+                            this.tabPane.getTabs().add(speakView.getTab());
+                        } catch (Exception ee) {
+                            FAIL.log(ee.getMessage());
+                            FAIL.log("AddUser1");
                         }
                     }
                 });
@@ -180,7 +110,7 @@ public class MenuView extends Application {
                     // System.out.println("[MenuView.java]: new button added");
                 } catch (Exception e) {
                     // HINT.log(e.toString());
-                    // HINT.log("Send user, add button, avoid duplicates.");
+                    WARN.log("Expected behavior (" + e.getMessage() + ")");
                 }
             }
         };
@@ -237,6 +167,7 @@ public class MenuView extends Application {
             } 
             catch (Exception e) {
                 FAIL.log(e.getMessage());
+                FAIL.log("Server");
             }
         };
     }
@@ -250,44 +181,152 @@ public class MenuView extends Application {
             try {
                 while (true) {
                     
-                    InputStream inputStream = socket.getInputStream();
                     byte[] buffer = new byte[1024];
-
-                    String incoming = new String(buffer, 0, inputStream.read(buffer));
-
+                    String incoming = new String(buffer, 0, socket.getInputStream().read(buffer));
                     Message message = JsonMessage.deserializeMessage(incoming);
                     System.out.println("Received: " + message);
-                    
-                    if (!this.user.getUsername().equals(message.getSender())) {
 
-                        // THIS SOCKET CLOSES, CATCH IN THE OTHER SOCKET
+                    for (SpeakView speakView : this.speakViews) {
+                        System.out.println(speakView.getUser());
+                        System.out.println(speakView);
+                        System.out.println(this.speakViews);
+                        if (
+                            speakView.getUser().getUsername().equals(message.getSender()) 
+                            /* speakView.getUser().getInetAddress().equals(message.get) Add option to get Inet Here */
+                        ) {
+                            try {
+                                // speakView.getTextArea().appendText("X: " + message.getText());
+                                String previousMessages = speakView.getTextArea().getText(); 
+                                speakView.getTextArea().setText(previousMessages + "\n" + "Other: " + message.getText() + "\n");
 
-                        // this.conversationOpens(message.getSender()); // conversationOpens
-                        // Add tab is done above
-                        // Append message into chat
+                                System.out.println("NULL? " + speakView.getTextArea().getLength());
+                                System.out.println(speakView.getUser().getUsername().equals(message.getSender()));
+                            } catch (Exception e) {
+                                e.getMessage();
+                                FAIL.log("on inserting more text");
+                            }
+                        }
                     }
-                    
-                    // Append message into chat
                 }
             } 
             catch (IOException e) {
                 FAIL.log(e.getMessage());
+                FAIL.log("Session");
             }
         };
     }
 
+    // Should I instantiate in the constructor??
+
+    public class SpeakView {
+
+        private User        user;
+        private Tab         tab;
+        private BorderPane  borderPane;
+        private GridPane    gridPane;
+        private TextArea    messageArea;
+        private ScrollPane  scrollPane;
+        private TextField   inputBox;
+        private Button      sendButton;
+
+        public void instantiateElements() {
+            this.messageArea = new TextArea();
+            this.scrollPane = new ScrollPane(this.messageArea);
+            this.inputBox = new TextField();
+            this.sendButton = new Button();
+            this.gridPane = new GridPane();
+            this.borderPane = new BorderPane(this.gridPane);
+        }
+
+        public void configuringPanel() {
+            this.gridPane.setHgap(10);
+            this.gridPane.setVgap(10);
+            this.gridPane.setPadding(new Insets(10));
+
+            this.gridPane.add(scrollPane, 0, 0, 1, 1);
+            this.gridPane.add(inputBox, 0, 1);
+            this.gridPane.add(sendButton, 1, 1);
+        }
+
+        public void configuringElements() {
+
+            this.messageArea.setEditable(false);
+            this.messageArea.setWrapText(true);
+            this.messageArea.setMaxHeight(Region.USE_COMPUTED_SIZE);
+            this.messageArea.setLayoutX(1000);
+            this.messageArea.setStyle("-fx-font-size: 16;"); // Set font size to 16
+
+            this.scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
+            this.scrollPane.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+
+            this.inputBox.setPromptText("Type your message...");
+            this.inputBox.setStyle("-fx-font-size: 16;"); // Set font size to 16
+
+            this.sendButton.setText("Send");
+        }
+
+        public void configuringTab(User user) {
+            this.tab = new Tab(user.getUsername());
+            this.tab.setContent(this.borderPane);
+        }
+        
+        public SpeakView(User user) {
+            this.user = user;
+            this.instantiateElements(); // elements instance
+            this.configuringElements(); // elements settings
+            this.configuringPanel(); // panel settings
+            this.configuringTab(this.user);
+            this.configuringButtonAction();
+        }
+
+        public void configuringButtonAction() {
+            this.sendButton.setOnAction((event) -> {
+                try {
+                    this.sendToSocket(this.user);                    
+                } catch (Exception e) {
+                    FAIL.log(e.getMessage());
+                    FAIL.log("configuringButtonAction");
+                }
+            });
+        }
+
+        public void sendToSocket(User user) throws IOException {
+            String text = this.inputBox.getText();
+
+            // this.textArea.appendText("You: " + text + "\n");
+
+            String current = this.messageArea.getText(); 
+
+            // When we set without the previous here, it stopts overflowing
+            this.messageArea.setText(current + "You: " + text);
+            // this.messageArea.setText("You: " + text);
+
+            Socket socket = new Socket(user.getInetAddress(), 8085);
+            try {
+                Message message = new Message(text, this.user.getUsername());
+                String serialized = JsonMessage.serializeMessage(message);
+                System.out.println("Sending: " + serialized);
+                byte[] bytes = serialized.getBytes(StandardCharsets.UTF_8);
+                socket.getOutputStream().write(bytes, 0, bytes.length);
+            } catch (Exception e) {
+                FAIL.log(e.getMessage());
+                FAIL.log("sendToSocket");
+            } finally {
+                inputBox.clear();
+                // socket.close();
+            }
+        }
+
+        public Tab getTab() {
+            return this.tab;
+        }
+
+        public User getUser() {
+            return this.user;
+        }
+        
+        public TextArea getTextArea() {
+            return this.messageArea;
+        }
+    }
 }
-
-// Comm = Communication
-
-// Action -> Trigger
-// (double_click_on_user) -> openComm
-// openComm = (openTab) + (openGrid) + (openSocket)
-// (send_message) -> socket.send()
-// closeComm = (closeTab) + (closeGrid) + (closeSocket)
-
-/* double click user button */
-/* open tab with conversation */
-/* send messages through socket */
-/* if close, catch and send print message back */
-/* close click, close tab and conversation */
