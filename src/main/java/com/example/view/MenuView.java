@@ -191,7 +191,7 @@ public class MenuView extends Application {
           byte[] buffer = new byte[2048];
           int bytesRead = socket.getInputStream().read(buffer);
 
-          if (bytesRead <= 0) break;
+          assert (bytesRead <= 0);
 
           String incoming = new String(buffer, 0, bytesRead);
           Message message = JsonMessage.deserializeMessage(incoming);
@@ -213,6 +213,8 @@ public class MenuView extends Application {
                 FAIL.log("on inserting more text");
               }
             }
+
+            // TODO: ELSE, because, not only host should change messages
           }
         }
       } 
