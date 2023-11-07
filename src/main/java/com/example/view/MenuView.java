@@ -173,13 +173,27 @@ public class MenuView extends Application {
   public Runnable session(Socket socket) {
 
     System.out.println("Session started from " + socket.getInetAddress());
-
+    
     return () -> {
       try {
+
+        if (socket.isClosed()) {
+          System.out.println("Socket is closed");
+          try {
+            this.stop();
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+
         while (true) {
 
           byte[] buffer = new byte[2048];
-          String incoming = new String(buffer, 0, socket.getInputStream().read(buffer));
+          int bytesRead = socket.getInputStream().read(buffer);
+
+          if (bytesRead <= 0) break;
+
+          String incoming = new String(buffer, 0, bytesRead);
           Message message = JsonMessage.deserializeMessage(incoming);
           System.out.println("[Socket] Received: " + message);
 
@@ -189,11 +203,10 @@ public class MenuView extends Application {
             boolean localhost = speak.getUser().getInetAddress().equals(this.user.getInetAddress()); 
             if (self && localhost) {
               try {
-                Thread.sleep(500); // This Helps Fixing?
-                // TODO: Here is the problem
+                Thread.sleep(500); // Todo: deferring the daemong service helps
                 String current = speak.getTextArea().getText();
                 String text = current + "\n" + "Other: " + message.getText() + "\n";
-                this.platform(() -> speak.getTextArea().setText(text));
+                this.platform(() -> speak.getTextArea().setText(text)); // Todo: seconday thread
               } 
               catch (Exception e) {
                 e.getMessage();
@@ -326,10 +339,10 @@ public class MenuView extends Application {
 
     public void closeSocket(Socket socket) {
       try {
+        System.out.println("[Socket] Close: connection interrupet");
         socket.close();
       } catch (Exception e) {
         e.printStackTrace();
-        System.out.println("HELLOW");
       }
     }
 
