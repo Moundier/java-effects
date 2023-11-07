@@ -3,7 +3,7 @@ package com.example.view;
 import com.example.model.User;
 import com.example.model.User.Status;
 import com.example.service.Broadcaster;
-import com.example.utils.Host;
+import com.example.utils.LocalHost;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -112,7 +112,7 @@ public class HomeView extends Application {
       .username(username)
       .status(Status.ONLINE)
       .timestamp(System.currentTimeMillis())
-      .inetAddress(Host.fetchLocalIP())
+      .inetAddress(LocalHost.getByName())
       .build();
 
     // Start all of them
