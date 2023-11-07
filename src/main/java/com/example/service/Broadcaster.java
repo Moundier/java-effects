@@ -5,7 +5,7 @@ import java.util.*;
 
 import com.example.model.User;
 import com.example.utils.JsonUser;
-import com.example.utils.Host;
+import com.example.utils.LocalHost;
 import com.example.utils.Console.DONE;
 import com.example.utils.Console.INFO;
 import com.example.utils.Console.LINE;
@@ -82,7 +82,7 @@ public class Broadcaster {
       }
 
       Boolean isNotFound = (online.isEmpty());
-      Boolean isLocalHost = (receivedUser.getInetAddress().equals(Host.fetchLocalIP()));
+      Boolean isLocalHost = (receivedUser.getInetAddress().equals(LocalHost.getByName()));
 
       if (isNotFound)
         FAIL.log("No users online.");
