@@ -42,6 +42,12 @@ public class Console {
     }
   }
 
+  public static class PATH {
+    public static void log(String message) {
+      System.out.println("[PATH]: " + message);
+    }
+  }
+
   public static String addColor(String text, String color) {
     String colorCode = getColorCode(color);
     return colorCode + text + removeColor();
