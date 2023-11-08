@@ -73,7 +73,7 @@ public class Broadcaster {
   void processRadarMessage(User receivedUser) {
 
     synchronized (online) {
-      // Update user timestmap
+
       for (User user : online) {
         if (user.equals(receivedUser)) {
           user.updateTimestap();
