@@ -1,4 +1,4 @@
-# P2P Project
+# java-effects
 
 * Run `mvn clean install`
 * Run `mvn clean javafx:run`
@@ -17,36 +17,3 @@ Windows:
 * Maven
 * JavaFX
 * Docker
-
-### Todo
-
-* Double click user button
-* Open tab with conversation
-* Send messages through socket
-* If close, catch and send print message back
-* Close click, close tab and conversation
-
-jar tf your-app.jar
-
-jar -xf your-app.jar (Generate MANIFEST)
-Move META-INF to src/main/resources
-Edit the MANIFEST.MF (Add: Main-Class: com.example.view.HomeView)
-
-jar cf target/your-app-updated.jar /path/to/META-INF (Recreate a JAR file with the modified META-INF)
-
-sudo docker build -t image .
-sudo docker run --rm -it image:latest
-
-# Session bugs
-* `lsof -i :8084`
-
-To kill forcelly
-* `kill -9 <PID>` 
-
-# JavaFX
-
-Any background method or thread, that applies changes to scenes in javaFx is, by default, respectfully either not executed or thread-unsafe.
-And also they might cause bugs or even crashes in the application.
-
-
-
